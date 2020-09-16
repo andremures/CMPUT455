@@ -1,0 +1,5 @@
+boardsize 7
+play b a1
+showboard
+gogui-rules_legal_moves
+

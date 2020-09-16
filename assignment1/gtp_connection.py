@@ -209,8 +209,10 @@ class GtpConnection:
 
     def gogui_rules_legal_moves_cmd(self, args):
         """ Implement this function for Assignment 1 """
-        self.respond()
-        return
+        moves = GoBoardUtil.generate_legal_moves(self.board, self.board.current_player)
+        moves = map(lambda m: point_to_coord(m, self.board.size), moves)
+        moves = list(map(format_point, moves))
+        self.respond(' '.join(moves))
 
     def gogui_rules_side_to_move_cmd(self, args):
         """ We already implemented this function for Assignment 1 """
