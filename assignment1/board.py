@@ -19,7 +19,10 @@ from board_util import (
     PASS,
     is_black_white,
     is_black_white_empty,
+    colour_to_str,
     coord_to_point,
+    point_to_coord,
+    add_coord,
     where1d,
     MAXSIZE,
     GO_POINT
@@ -204,9 +207,10 @@ class GoBoard(object):
 
         if color != self.current_player:
             return False
-        
+
         self.board[point] = color
         self.current_player = GoBoardUtil.opponent(color)
+        self.last_move = point
         return True
 
     def neighbors_of_color(self, point, color):
@@ -240,4 +244,47 @@ class GoBoard(object):
             board_moves.append(self.last_move)
         if self.last2_move != None and self.last2_move != PASS:
             board_moves.append(self.last2_move)
-            return 
+            return
+
+    def _reach_direction(self, point, dir):
+        inv_dir = (-dir[0], -dir[1])
+        return self._reach_direction_helper(point, dir) + self._reach_direction_helper(point, inv_dir) + 1
+
+    def _reach_direction_helper(self, point, dir):
+        """
+        dir: the index offset from point indicating the direction
+        (example: 1 = right, -1 = left)
+        (example: boardsize = down, -boardsize = up)
+        returns the number of stones of colour in direction dir from point
+        """
+        count = 0
+        colour = self.get_color(point)
+        coord = point_to_coord(point, self.size)
+        nextpt = add_coord(coord, dir)
+
+        while 1 <= nextpt[0] <= self.size and 1 <= nextpt[1] <= self.size:
+            if self.get_color(coord_to_point(nextpt[0], nextpt[1], self.size)) != colour:
+                break
+            count += 1
+            nextpt = add_coord(nextpt, dir)
+
+        return count
+
+    def is_full(self):
+        return len(self.get_empty_points()) == 0
+
+    def result(self) -> str:
+        colour = self.get_color(self.last_move)
+        if colour == EMPTY:
+            return "unknown"
+
+        for dir in [(0, 1), (1, 0), (1, 1), (1, -1)]:
+            print(self._reach_direction(self.last_move, dir))
+            if self._reach_direction(self.last_move, dir) >= 5:
+                return colour_to_str(colour)
+
+        if self.is_full():
+            return "draw"
+
+        return "unknown"
+

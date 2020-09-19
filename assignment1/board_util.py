@@ -24,6 +24,18 @@ def is_black_white_empty(color):
     return color == BLACK or color == WHITE or color == EMPTY
 
 
+def colour_to_str(colour):
+    if colour == BLACK:
+        return "black"
+    elif colour == WHITE:
+        return "white"
+    elif colour == EMPTY:
+        return "empty"
+    elif colour == BORDER:
+        return "border"
+    return
+
+
 """
 A GO_POINT is a point on a Go board.
 It is encoded as a 32-bit integer, using the numpy type.
@@ -106,6 +118,23 @@ def coord_to_point(row, col, boardsize):
     return NS * row + col
 
 
+def point_to_coord(point, boardsize):
+    """
+    Transform point given as board array index
+    to (row, col) coordinate representation.
+    Special case: PASS is not transformed
+    """
+    if point == PASS:
+        return PASS
+    else:
+        NS = boardsize + 1
+        return divmod(point, NS)
+
+
+def add_coord(coord, dir):
+    return (coord[0] + dir[0], coord[1] + dir[1])
+
+
 class GoBoardUtil(object):
     @staticmethod
     def generate_legal_moves(board, color):
@@ -142,13 +171,14 @@ class GoBoardUtil(object):
         """
         moves = board.get_empty_points()
         np.random.shuffle(moves)
-        for move in moves:
-            legal = not (
-                use_eye_filter and board.is_eye(move, color)
-            ) and board.is_legal(move, color)
-            if legal:
-                return move
-        return PASS
+        # for move in moves:
+        #     legal = not (
+        #         use_eye_filter and board.is_eye(move, color)
+        #     ) and board.is_legal(move, color)
+        #     if legal:
+        #         return move
+        # return PASS
+        return moves[0]
 
     @staticmethod
     def generate_random_moves(board, use_eye_filter):

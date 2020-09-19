@@ -30,7 +30,7 @@ class GtpConnection:
         Parameters
         ----------
         go_engine:
-            a program that can reply to a set of GTP commandsbelow
+            a program that can reply to a set of GTP commands below
         board: 
             Represents the current board state.
         """
@@ -241,7 +241,8 @@ class GtpConnection:
             
     def gogui_rules_final_result_cmd(self, args):
         """ Implement this function for Assignment 1 """
-        self.respond("unknown")
+
+        self.respond(self.board.result())
 
     def play_cmd(self, args):
         """ Modify this function for Assignment 1 """
@@ -252,18 +253,13 @@ class GtpConnection:
             board_color = args[0].lower()
             board_move = args[1]
             color = color_to_int(board_color)
-            if args[1].lower() == "pass":
-                self.board.play_move(PASS, color)
-                self.board.current_player = GoBoardUtil.opponent(color)
-                self.respond()
-                return
             coord = move_to_coord(args[1], self.board.size)
-            print(args[1], coord)
+            # print(args[1], coord)
             if coord:
                 move = coord_to_point(coord[0], coord[1], self.board.size)
             else:
                 self.error(
-                    "Error executing move {} converted from {}".format(move, args[1])
+                    "Error executing move {} converted from {}".format(coord, args[1])
                 )
                 return
             if not self.board.play_move(move, color):
@@ -377,11 +373,11 @@ def move_to_coord(point_str, board_size):
         return PASS
     try:
         col_c = s[0]
-        if (not "a" <= col_c <= "z") or col_c == "i":
+        if not "a" <= col_c <= "z":
             raise ValueError
-        col = ord(col_c) - ord("a")
-        if col_c < "i":
-            col += 1
+        col = ord(col_c) - ord("a") + 1
+        # if col_c < "i":
+        #     col += 1
         row = int(s[1:])
         if row < 1:
             raise ValueError
