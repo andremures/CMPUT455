@@ -227,7 +227,7 @@ class GtpConnection:
 
     def time_limit_cmd(self, args):
 
-        assert 1<= int(args[0]) <= 100
+        assert 1 <= int(args[0]) <= 100
         limit = int(args[0])
         self.time_limit = limit
         self.respond()
