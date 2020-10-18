@@ -5,6 +5,7 @@
 from gtp_connection import GtpConnection
 from board_util import GoBoardUtil
 from board import GoBoard
+from alphabeta import call_alphabeta
 
 
 class Gomoku():
@@ -24,7 +25,13 @@ class Gomoku():
         self.version = 1.0
 
     def get_move(self, board, color):
-        return GoBoardUtil.generate_random_move(board, color)
+        score = call_alphabeta(board)
+        print(score)
+        if score > 0:
+            print('WE WIN as {}!!!'.format(color))
+            return GoBoardUtil.generate_random_move(board, color)
+        else:
+            return GoBoardUtil.generate_random_move(board, color)
 
 
 def run():

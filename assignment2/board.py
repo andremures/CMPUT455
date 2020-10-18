@@ -43,6 +43,22 @@ class GoBoard(object):
         self.reset(size)
         self.calculate_rows_cols_diags()
 
+    def reset(self, size):
+        """
+        Creates a start state, an empty board with given size.
+        """
+        self.size = size
+        self.NS = size + 1
+        self.WE = 1
+        self.ko_recapture = None
+        self.last_move = None
+        self.last2_move = None
+        self.current_player = BLACK
+        self.maxpoint = size * size + 3 * (size + 1)
+        self.board = np.full(self.maxpoint, BORDER, dtype=GO_POINT)
+        self._initialize_empty_points(self.board)
+        self.calculate_rows_cols_diags()
+
     def calculate_rows_cols_diags(self):
         if self.size < 5:
             return
@@ -103,22 +119,6 @@ class GoBoard(object):
         assert len(self.cols) == self.size
         assert len(self.diags) == (2 * (self.size - 5) + 1) * 2
 
-    def reset(self, size):
-        """
-        Creates a start state, an empty board with given size.
-        """
-        self.size = size
-        self.NS = size + 1
-        self.WE = 1
-        self.ko_recapture = None
-        self.last_move = None
-        self.last2_move = None
-        self.current_player = BLACK
-        self.maxpoint = size * size + 3 * (size + 1)
-        self.board = np.full(self.maxpoint, BORDER, dtype=GO_POINT)
-        self._initialize_empty_points(self.board)
-        self.calculate_rows_cols_diags()
-
     def copy(self):
         b = GoBoard(self.size)
         assert b.NS == self.NS
@@ -136,6 +136,22 @@ class GoBoard(object):
 
     def pt(self, row, col):
         return coord_to_point(row, col, self.size)
+
+    def undo_move(self):
+        self.board[self.last_move] = EMPTY
+        self.current_player = GoBoardUtil.opponent(self.current_player)
+
+    def get_best_moves(self):
+        return GoBoardUtil.generate_legal_moves(self, self.current_player)
+
+    def end_of_game(self):
+        if self.get_empty_points().size == 0:
+            return True
+        result = self.detect_five_in_a_row()
+        if result == BLACK or result == WHITE:
+            return True
+        else:
+            return False
 
     def is_legal(self, point, color):
         """
@@ -177,89 +193,14 @@ class GoBoard(object):
             start = self.row_start(row)
             board[start : start + self.size] = EMPTY
 
-    def is_eye(self, point, color):
-        """
-        Check if point is a simple eye for color
-        """
-        if not self._is_surrounded(point, color):
-            return False
-        # Eye-like shape. Check diagonals to detect false eye
-        opp_color = GoBoardUtil.opponent(color)
-        false_count = 0
-        at_edge = 0
-        for d in self._diag_neighbors(point):
-            if self.board[d] == BORDER:
-                at_edge = 1
-            elif self.board[d] == opp_color:
-                false_count += 1
-        return false_count <= 1 - at_edge  # 0 at edge, 1 in center
+    def evaluate(self):
+        win_color = self.detect_five_in_a_row()
+        assert win_color != self.current_player
 
-    def _is_surrounded(self, point, color):
-        """
-        check whether empty point is surrounded by stones of color
-        (or BORDER) neighbors
-        """
-        for nb in self._neighbors(point):
-            nb_color = self.board[nb]
-            if nb_color != BORDER and nb_color != color:
-                return False
-        return True
+        if win_color != EMPTY:
+            return -10000000
 
-    def _has_liberty(self, block):
-        """
-        Check if the given block has any liberty.
-        block is a numpy boolean array
-        """
-        for stone in where1d(block):
-            empty_nbs = self.neighbors_of_color(stone, EMPTY)
-            if empty_nbs:
-                return True
-        return False
-
-    def _block_of(self, stone):
-        """
-        Find the block of given stone
-        Returns a board of boolean markers which are set for
-        all the points in the block 
-        """
-        color = self.get_color(stone)
-        assert is_black_white(color)
-        return self.connected_component(stone)
-
-    def connected_component(self, point):
-        """
-        Find the connected component of the given point.
-        """
-        marker = np.full(self.maxpoint, False, dtype=bool)
-        pointstack = [point]
-        color = self.get_color(point)
-        assert is_black_white_empty(color)
-        marker[point] = True
-        while pointstack:
-            p = pointstack.pop()
-            neighbors = self.neighbors_of_color(p, color)
-            for nb in neighbors:
-                if not marker[nb]:
-                    marker[nb] = True
-                    pointstack.append(nb)
-        return marker
-
-    def _detect_and_process_capture(self, nb_point):
-        """
-        Check whether opponent block on nb_point is captured.
-        If yes, remove the stones.
-        Returns the stone if only a single stone was captured,
-        and returns None otherwise.
-        This result is used in play_move to check for possible ko
-        """
-        single_capture = None
-        opp_block = self._block_of(nb_point)
-        if not self._has_liberty(opp_block):
-            captures = list(where1d(opp_block))
-            self.board[captures] = EMPTY
-            if len(captures) == 1:
-                single_capture = nb_point
-        return single_capture
+        return 0
 
     def play_move(self, point, color):
         """

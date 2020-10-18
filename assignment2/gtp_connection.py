@@ -19,6 +19,7 @@ from board_util import (
     coord_to_point,
 )
 import numpy as np
+from alphabeta import call_alphabeta
 import re
 
 
@@ -55,6 +56,7 @@ class GtpConnection:
             "play": self.play_cmd,
             "legal_moves": self.legal_moves_cmd,
             "timelimit": self.time_limit_cmd,
+            "solve": self.solve_cmd,
             "gogui-rules_game_id": self.gogui_rules_game_id_cmd,
             "gogui-rules_board_size": self.gogui_rules_board_size_cmd,
             "gogui-rules_legal_moves": self.gogui_rules_legal_moves_cmd,
@@ -74,8 +76,25 @@ class GtpConnection:
             "genmove": (1, "Usage: genmove {w,b}"),
             "play": (2, "Usage: play {b,w} MOVE"),
             "legal_moves": (1, "Usage: legal_moves {w,b}"),
-            "timelimit":(1, 'Usage: set time limit as an integer')
+            "timelimit":(1, 'Usage: set time limit as an integer'),
+            "solve":(0, 'No arguments necessary for solve')
         }
+
+    def solve_cmd(self, args):
+        score, move = call_alphabeta(self.board)
+
+        move = format_point(point_to_coord(move, self.board.size))
+
+        print('SCORE: {}'.format(score))
+        if score == 0:
+            self.respond("draw {}".format(move))
+        else:
+            if score > 0:
+                winner = self.board.current_player
+            else:
+                winner = GoBoardUtil.opponent(self.board.current_player)
+
+            self.respond('{} {}'.format(color_to_string(winner), move))
 
     def write(self, data):
         stdout.write(data)
@@ -226,7 +245,6 @@ class GtpConnection:
         self.respond(sorted_moves)
 
     def time_limit_cmd(self, args):
-
         assert 1 <= int(args[0]) <= 100
         limit = int(args[0])
         self.time_limit = limit
@@ -415,3 +433,13 @@ def color_to_int(c):
         return color_to_int[c]
     except:
         raise KeyError("\"{}\" wrong color".format(c))
+
+
+def color_to_string(c):
+    """convert color to the appropriate character"""
+    color_to_string = {BLACK: 'b', WHITE: 'w', EMPTY: 'e', BORDER: 'BORDER'}
+
+    try:
+        return color_to_string[c]
+    except:
+        raise KeyError("\"{}\" invalid color".format(c))
