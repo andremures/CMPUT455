@@ -2,10 +2,19 @@
 # /usr/bin/python3
 # Set the path to your python3 above
 
+import signal
 from gtp_connection import GtpConnection, color_to_string, format_point, point_to_coord
 from board_util import GoBoardUtil
 from board import GoBoard
 from alphabeta import call_alphabeta
+
+def handler(signum, frame):
+    raise TimeoutException
+
+class TimeoutException(Exception):
+    pass
+
+signal.signal(signal.SIGALRM, handler)
 
 
 class Gomoku():
@@ -24,27 +33,36 @@ class Gomoku():
         self.name = "GomokuAssignment2"
         self.version = 1.0
 
-    def get_move(self, board, color):
-        outcome, move = self.solve(board)
+    def get_move(self, board, color, timelimit):
+        outcome, move = self.solve(board, timelimit)
 
         if move is not None:
             return move
         else:
             return GoBoardUtil.generate_random_move(board, color)
 
-    def solve(self, board):
-        score, move = call_alphabeta(board)
+    def solve(self, board, timelimit):
+        board_copy = board.copy()
+        signal.alarm(timelimit)  # sets an alram for the given time_limit
+        try:
+            score, move = call_alphabeta(board)
 
-        if score == 0:
-            return "draw", move
-        else:
-            if score > 0:
-                winner = board.current_player
-                return color_to_string(winner), move
+            if score == 0:
+                return "draw", move
             else:
-                winner = GoBoardUtil.opponent(board.current_player)
-                # We only display the move if the current player wins
-                return color_to_string(winner), None
+                if score > 0:
+                    winner = board.current_player
+                    return color_to_string(winner), move
+                else:
+                    winner = GoBoardUtil.opponent(board.current_player)
+                    # We only display the move if the current player wins
+                    return color_to_string(winner), None
+
+        except TimeoutException:
+            board.load(board_copy)
+            return "unknown", None
+        finally:
+            signal.alarm(0)  # disable the alarm
 
 
 def run():

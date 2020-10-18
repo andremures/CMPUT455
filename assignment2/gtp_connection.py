@@ -21,15 +21,6 @@ from board_util import (
 import numpy as np
 from alphabeta import call_alphabeta
 import re
-import signal
-
-def handler(signum, frame):
-    raise TimeoutException
-
-class TimeoutException(Exception):
-    pass
-
-signal.signal(signal.SIGALRM, handler)
 
 
 class GtpConnection:
@@ -90,44 +81,13 @@ class GtpConnection:
         }
 
     def solve_cmd(self, args):
-        outcome, move = self.go_engine.solve(self.board)
+        outcome, move = self.go_engine.solve(self.board, self.time_limit)
 
         if move is None:
             self.respond("{}".format(outcome))
         else:
             move = format_point(point_to_coord(move, self.board.size))
             self.respond("{} {}".format(outcome, move))
-
-            self.respond('{} {}'.format(color_to_string(winner), move))
-
-        # signal.alarm(self.time_limit)  # sets an alram for the given time_limit
-        # try:
-        #     score, move = call_alphabeta(self.board)
-        #
-        #     move = format_point(point_to_coord(move, self.board.size))
-        #
-        #     print('SCORE: {}'.format(score))
-        #     if score == 0:
-        #         winner = "draw"
-        #         self.respond("draw {}".format(move))
-        #     else:
-        #         if score > 0:
-        #             winner = self.board.current_player
-        #         else:
-        #             winner = GoBoardUtil.opponent(self.board.current_player)
-        #
-        #         self.respond('{} {}'.format(color_to_string(winner), move))
-        # except:
-        #     winner = "unknown"
-        #
-        # signal.alarm(0)  # disable the alarm
-        #
-        # if winner == "unknown":
-        #     return winner, "nomove"
-        # if winner == GoBoardUtil.opponent(self.board.current_player) or winner == self.board.current_player:
-        #     return winner[0].lower(), move
-        #
-        # return winner, move
 
     def write(self, data):
         stdout.write(data)
@@ -327,7 +287,7 @@ class GtpConnection:
             return
         board_color = args[0].lower()
         color = color_to_int(board_color)
-        move = self.go_engine.get_move(self.board, color)
+        move = self.go_engine.get_move(self.board, color, self.time_limit)
         move_coord = point_to_coord(move, self.board.size)
         move_as_string = format_point(move_coord)
         if self.board.is_legal(move, color):

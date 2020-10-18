@@ -59,6 +59,17 @@ class GoBoard(object):
         self._initialize_empty_points(self.board)
         self.calculate_rows_cols_diags()
 
+    def load(self, board):
+        self.reset(board.size)
+        assert self.NS == board.NS
+        assert self.WE == board.WE
+        self.ko_recapture = board.ko_recapture
+        self.last_move = board.last_move
+        self.last2_move = board.last2_move
+        self.current_player = board.current_player
+        assert self.maxpoint == board.maxpoint
+        self.board = np.copy(board.board)
+
     def calculate_rows_cols_diags(self):
         if self.size < 5:
             return
