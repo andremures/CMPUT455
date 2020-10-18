@@ -85,39 +85,49 @@ class GtpConnection:
             "genmove": (1, "Usage: genmove {w,b}"),
             "play": (2, "Usage: play {b,w} MOVE"),
             "legal_moves": (1, "Usage: legal_moves {w,b}"),
-            "timelimit":(1, 'Usage: set time limit as an integer'),
-            "solve":(0, 'No arguments necessary for solve')
+            "timelimit": (1, 'Usage: set time limit as an integer'),
+            "solve": (0, 'No arguments necessary for solve')
         }
 
     def solve_cmd(self, args):
-        signal.alarm(self.time_limit)   # sets an alram for the given time_limit
-        try:
-            score, move = call_alphabeta(self.board)
+        outcome, move = self.go_engine.solve(self.board)
 
+        if move is None:
+            self.respond("{}".format(outcome))
+        else:
             move = format_point(point_to_coord(move, self.board.size))
+            self.respond("{} {}".format(outcome, move))
 
-            print('SCORE: {}'.format(score))
-            if score == 0:
-                winner = "draw"
-                self.respond("draw {}".format(move))
-            else:
-                if score > 0:
-                    winner = self.board.current_player
-                else:
-                    winner = GoBoardUtil.opponent(self.board.current_player)
+            self.respond('{} {}'.format(color_to_string(winner), move))
 
-                self.respond('{} {}'.format(color_to_string(winner), move))
-        except:
-            winner = "unknown"
-
-        signal.alarm(0)  # disable the alarm 
-
-        if winner == "unknown":
-            return winner, "nomove"
-        if winner == GoBoardUtil.opponent(self.board.current_player) or winner == self.board.current_player:
-            return winner[0].lower(), move
-        
-        return winner, move 
+        # signal.alarm(self.time_limit)  # sets an alram for the given time_limit
+        # try:
+        #     score, move = call_alphabeta(self.board)
+        #
+        #     move = format_point(point_to_coord(move, self.board.size))
+        #
+        #     print('SCORE: {}'.format(score))
+        #     if score == 0:
+        #         winner = "draw"
+        #         self.respond("draw {}".format(move))
+        #     else:
+        #         if score > 0:
+        #             winner = self.board.current_player
+        #         else:
+        #             winner = GoBoardUtil.opponent(self.board.current_player)
+        #
+        #         self.respond('{} {}'.format(color_to_string(winner), move))
+        # except:
+        #     winner = "unknown"
+        #
+        # signal.alarm(0)  # disable the alarm
+        #
+        # if winner == "unknown":
+        #     return winner, "nomove"
+        # if winner == GoBoardUtil.opponent(self.board.current_player) or winner == self.board.current_player:
+        #     return winner[0].lower(), move
+        #
+        # return winner, move
 
     def write(self, data):
         stdout.write(data)
@@ -189,8 +199,9 @@ class GtpConnection:
 
     def respond(self, response=""):
         """ Send response to stdout """
-        stdout.write("= {}\n\n".format(response))
-        stdout.flush()
+        if response != "":
+            stdout.write("= {}\n\n".format(response))
+            stdout.flush()
 
     def reset(self, size):
         """
@@ -316,17 +327,12 @@ class GtpConnection:
             return
         board_color = args[0].lower()
         color = color_to_int(board_color)
-        winner, winning_move = self.solve_cmd('genmove_cmd') # needs changing as per solve function
-        if winner == board_color or winner == "draw":
-            row, col = move_to_coord(winning_move, self.board.size)
-            move = self.board.pt(row,col)
-        else: # else outcome is notwinner or unknow then generate random move
-            move = self.go_engine.get_move(self.board, color)
+        move = self.go_engine.get_move(self.board, color)
         move_coord = point_to_coord(move, self.board.size)
         move_as_string = format_point(move_coord)
         if self.board.is_legal(move, color):
             self.board.play_move(move, color)
-            self.respond(move_as_string.lower())
+            self.respond(move_as_string)
         else:
             self.respond("Illegal move: {}".format(move_as_string))
 

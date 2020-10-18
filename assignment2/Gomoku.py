@@ -2,7 +2,7 @@
 # /usr/bin/python3
 # Set the path to your python3 above
 
-from gtp_connection import GtpConnection
+from gtp_connection import GtpConnection, color_to_string, format_point, point_to_coord
 from board_util import GoBoardUtil
 from board import GoBoard
 from alphabeta import call_alphabeta
@@ -25,13 +25,26 @@ class Gomoku():
         self.version = 1.0
 
     def get_move(self, board, color):
-        score = call_alphabeta(board)
-        print(score)
-        if score > 0:
-            print('WE WIN as {}!!!'.format(color))
-            return GoBoardUtil.generate_random_move(board, color)
+        outcome, move = self.solve(board)
+
+        if move is not None:
+            return move
         else:
             return GoBoardUtil.generate_random_move(board, color)
+
+    def solve(self, board):
+        score, move = call_alphabeta(board)
+
+        if score == 0:
+            return "draw", move
+        else:
+            if score > 0:
+                winner = board.current_player
+                return color_to_string(winner), move
+            else:
+                winner = GoBoardUtil.opponent(board.current_player)
+                # We only display the move if the current player wins
+                return color_to_string(winner), None
 
 
 def run():
