@@ -76,25 +76,34 @@ class GtpConnection:
             "genmove": (1, "Usage: genmove {w,b}"),
             "play": (2, "Usage: play {b,w} MOVE"),
             "legal_moves": (1, "Usage: legal_moves {w,b}"),
-            "timelimit":(1, 'Usage: set time limit as an integer'),
-            "solve":(0, 'No arguments necessary for solve')
+            "timelimit": (1, 'Usage: set time limit as an integer'),
+            "solve": (0, 'No arguments necessary for solve')
         }
 
     def solve_cmd(self, args):
-        score, move = call_alphabeta(self.board)
+        outcome, move = self.go_engine.solve(self.board)
 
-        move = format_point(point_to_coord(move, self.board.size))
-
-        print('SCORE: {}'.format(score))
-        if score == 0:
-            self.respond("draw {}".format(move))
+        if move is None:
+            self.respond("{}".format(outcome))
         else:
-            if score > 0:
-                winner = self.board.current_player
-            else:
-                winner = GoBoardUtil.opponent(self.board.current_player)
+            move = format_point(point_to_coord(move, self.board.size))
+            self.respond("{} {}".format(outcome, move))
 
-            self.respond('{} {}'.format(color_to_string(winner), move))
+        # score, move = call_alphabeta(self.board)
+        #
+        # move = format_point(point_to_coord(move, self.board.size))
+        #
+        # print('SCORE: {}'.format(score))
+        # if score == 0:
+        #     self.respond("draw {}".format(move))
+        # else:
+        #     if score > 0:
+        #         winner = self.board.current_player
+        #         self.respond('{} {}'.format(color_to_string(winner), move))
+        #     else:
+        #         winner = GoBoardUtil.opponent(self.board.current_player)
+        #         # We only display the move if the current player wins
+        #         self.respond('{}'.format(color_to_string(winner)))
 
     def write(self, data):
         stdout.write(data)
@@ -166,8 +175,9 @@ class GtpConnection:
 
     def respond(self, response=""):
         """ Send response to stdout """
-        stdout.write("= {}\n\n".format(response))
-        stdout.flush()
+        if response != "":
+            stdout.write("= {}\n\n".format(response))
+            stdout.flush()
 
     def reset(self, size):
         """
@@ -298,7 +308,7 @@ class GtpConnection:
         move_as_string = format_point(move_coord)
         if self.board.is_legal(move, color):
             self.board.play_move(move, color)
-            self.respond(move_as_string.lower())
+            self.respond(move_as_string)
         else:
             self.respond("Illegal move: {}".format(move_as_string))
 

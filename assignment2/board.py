@@ -137,8 +137,8 @@ class GoBoard(object):
     def pt(self, row, col):
         return coord_to_point(row, col, self.size)
 
-    def undo_move(self):
-        self.board[self.last_move] = EMPTY
+    def undo_move(self, move):
+        self.board[move] = EMPTY
         self.current_player = GoBoardUtil.opponent(self.current_player)
 
     def get_best_moves(self):
