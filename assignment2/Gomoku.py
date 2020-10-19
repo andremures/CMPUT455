@@ -7,6 +7,7 @@ from gtp_connection import GtpConnection, color_to_string, format_point, point_t
 from board_util import GoBoardUtil
 from board import GoBoard
 from alphabeta import call_alphabeta
+from transpositiontable import TranspositionTable, ZobristHasher
 
 import cProfile
 
@@ -43,11 +44,12 @@ class Gomoku():
         else:
             return GoBoardUtil.generate_random_move(board, color)
 
-    def solve(self, board, timelimit):
+    def solve(self, board, timelimit, tTable, hasher):
+        print(tTable.returnTable())
         board_copy = board.copy()
         signal.alarm(timelimit)  # sets an alram for the given time_limit
         try:
-            score, move = call_alphabeta(board)
+            score, move = call_alphabeta(board, tTable, hasher)
 
             if score == 0:
                 return "draw", move

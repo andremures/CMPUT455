@@ -4,16 +4,25 @@ from gtp_connection import format_point, point_to_coord
 INFINITY = 100000
 
 
-def alphabeta(state, alpha, beta):
+def alphabeta(state, alpha, beta, tTable, hasher):
+
+    hashCode = hasher.hash(GoBoardUtil.get_oneD_board(state))
+    result = tTable.lookup(hashCode)
+
+    if result != None:
+        return result
+
     if state.end_of_game():
-        return state.evaluate(), None
+        result = state.evaluate()
+        storeResult(tTable,hashCode,result)
+        return result, None
 
     moves = state.get_best_moves()
     best_move = moves[0]
 
     for m in moves:
         state.play_move(m, state.current_player)
-        value, _ = alphabeta(state, -beta, -alpha)
+        value, _ = alphabeta(state, -beta, -alpha, tTable, hasher)
         value = -value
         if value > alpha:
             alpha = value
@@ -25,8 +34,13 @@ def alphabeta(state, alpha, beta):
 
 
 # initial call with full window
-def call_alphabeta(rootState):
+def call_alphabeta(rootState, tTable, hasher):
     # best_moves = rootState.get_best_moves()
     # best_moves = list(map(lambda p: format_point(point_to_coord(p, rootState.size)), best_moves))
     # print("best moves: {}".format(best_moves))
-    return alphabeta(rootState, -INFINITY, INFINITY)
+    return alphabeta(rootState, -INFINITY, INFINITY, tTable, hasher)
+
+
+def storeResult(tTable, code, result):
+    tTable.store(code, result)
+    return result

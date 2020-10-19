@@ -5,12 +5,15 @@ class TranspositionTable:
         self.table = {}
 
 
-    def add(self, code, score):
+    def store(self, code, score):
         self.table[code] = score
         
 
-    def get(self, code):
+    def lookup(self, code):
         return self.table.get(code)
+
+    def returnTable(self):
+        return self.table
 
 
 class ZobristHasher:

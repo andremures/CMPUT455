@@ -180,3 +180,17 @@ class GoBoardUtil(object):
             start = goboard.row_start(row + 1)
             board2d[row, :] = goboard.board[start : start + size]
         return board2d
+    
+    # method that returns the board in 1D array form
+    @staticmethod
+    def get_oneD_board(goboard):
+        
+        sizePadded = len(goboard.board)
+        board1d = []
+
+        # don't include element if its padding 
+        for i in range(sizePadded):
+            if goboard.board[i] != 3:
+                board1d.append(goboard.board[i])
+        
+        return board1d

@@ -20,6 +20,7 @@ from board_util import (
 )
 import numpy as np
 import re
+from transpositiontable import TranspositionTable, ZobristHasher
 
 
 class GtpConnection:
@@ -38,7 +39,8 @@ class GtpConnection:
         self.go_engine = go_engine
         self.board = board
         self.time_limit = 1
-
+        self.hasher = ZobristHasher(self.board.size)
+        self.transpositionTable = TranspositionTable()
 
         self.commands = {
             "protocol_version": self.protocol_version_cmd,
@@ -80,7 +82,7 @@ class GtpConnection:
         }
 
     def solve_cmd(self, args):
-        outcome, move = self.go_engine.solve(self.board, self.time_limit)
+        outcome, move = self.go_engine.solve(self.board, self.time_limit, self.transpositionTable, self.hasher)
 
         if move is None:
             self.respond("{}".format(outcome))
@@ -300,6 +302,8 @@ class GtpConnection:
 
     def gogui_rules_board_size_cmd(self, args):
         self.respond(str(self.board.size))
+        self.hasher.newBoardSize(self.board.size)
+        self.transpositionTable = TranspositionTable()
 
     def gogui_rules_legal_moves_cmd(self, args):
         if self.board.detect_five_in_a_row() != EMPTY:
