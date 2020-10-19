@@ -10,7 +10,7 @@ def alphabeta(state, alpha, beta, tTable, hasher):
     result = tTable.lookup(hashCode)
 
     if result != None:
-        return result
+        return result, None
 
     if state.end_of_game():
         result = state.evaluate()
