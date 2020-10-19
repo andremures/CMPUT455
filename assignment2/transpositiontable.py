@@ -63,7 +63,7 @@ class ZobristHasher:
         return hashCode
 
 
-
+"""
 # some code that runs hasher, initial call makes the zobrist array that is used for xor calls, otherwise
 # just pass through a board, has to be a 1D of size boardSize*boardSize
 # let me know if need to make changes !!!
@@ -85,7 +85,7 @@ for i in range(19*19):
 
 print(hasher.createZobHash(newBoard))
 
-
+"""
 
 
 
