@@ -19,7 +19,6 @@ from board_util import (
     coord_to_point,
 )
 import numpy as np
-from alphabeta import call_alphabeta
 import re
 
 

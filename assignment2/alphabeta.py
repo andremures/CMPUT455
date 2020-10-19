@@ -1,5 +1,6 @@
 
 from board_util import GoBoardUtil
+from gtp_connection import format_point, point_to_coord
 INFINITY = 100000
 
 
@@ -11,19 +12,13 @@ def alphabeta(state, alpha, beta):
     best_move = moves[0]
 
     for m in moves:
-        # print("move: {} {}".format(m, state.current_player))
-
-        # current = state.current_player
-        # print(str(GoBoardUtil.get_twoD_board(state)) + '\n\n')
         state.play_move(m, state.current_player)
         value, _ = alphabeta(state, -beta, -alpha)
         value = -value
-        # print(current, value, alpha, beta)
         if value > alpha:
             alpha = value
             best_move = m
         state.undo_move(m)
-        # print(str(GoBoardUtil.get_twoD_board(state)) + '\n\n')
         if value >= beta:
             return beta, m
     return alpha, best_move
@@ -31,5 +26,7 @@ def alphabeta(state, alpha, beta):
 
 # initial call with full window
 def call_alphabeta(rootState):
-    print("STARTING PLAYER: {}".format(rootState.current_player))
+    # best_moves = rootState.get_best_moves()
+    # best_moves = list(map(lambda p: format_point(point_to_coord(p, rootState.size)), best_moves))
+    # print("best moves: {}".format(best_moves))
     return alphabeta(rootState, -INFINITY, INFINITY)

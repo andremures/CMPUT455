@@ -3,7 +3,7 @@ import collections
 from board_util import BLACK, WHITE, EMPTY
 
 
-SCORE_MAP = [0, 1, 2, 5, 15]
+SCORE_MAP = [0, 1, 2, 5, 15, 1000000]
 
 
 def calc_score(counts, color):
@@ -19,50 +19,30 @@ def calc_score(counts, color):
     return SCORE_MAP[my_count] - SCORE_MAP[opp_count]
 
 
+def get_counts(board, five_line):
+    b_count = 0
+    w_count = 0
+    e_count = 0
+
+    for p in five_line:
+        stone = board.board[p]
+        if stone == BLACK:
+            b_count += 1
+        elif stone == WHITE:
+            w_count += 1
+        else:
+            e_count += 1
+
+    return b_count, w_count, e_count
+
+
 def evaluate(board, color):
     score = 0
     lines = board.rows + board.cols + board.diags
 
     for line in lines:
-        for counts in LineCountIterator(line):
+        for i in range(len(line) - 5):
+            counts = get_counts(board, line[i:i+5])
             score += calc_score(counts, color)
 
     return score
-
-
-class LineCountIterator:
-    def __init__(self, line):
-        self.line = line
-        self.size = len(line)
-
-    def __iter__(self):
-        self.b_count = 0
-        self.w_count = 0
-        self.e_count = 0
-        self.index = 0
-        self.q = collections.deque()
-        return self
-
-    def __next__(self):
-        if self.index >= self.size or self.size < 5:
-            raise StopIteration
-
-        if len(self.q) == 5:
-            stone = self.q.popleft()
-            self._add(stone, -1)
-
-        while len(self.q) < 5:
-            stone = self.line[self.index]
-            self.q.append(stone)
-            self._add(stone, 1)
-            self.index += 1
-
-        return self.b_count, self.w_count, self.e_count
-
-    def _add(self, stone, val):
-        if stone == BLACK:
-            self.b_count += val
-        elif stone == WHITE:
-            self.w_count += val
-        else:
-            self.e_count += val
