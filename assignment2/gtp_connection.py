@@ -38,7 +38,7 @@ class GtpConnection:
         self._debug_mode = debug_mode
         self.go_engine = go_engine
         self.board = board
-        self.time_limit = 1
+        self.time_limit = 30
         self.hasher = ZobristHasher(self.board.size)
         self.transpositionTable = TranspositionTable()
 
@@ -200,6 +200,8 @@ class GtpConnection:
         Reset the game with new boardsize args[0]
         """
         self.reset(int(args[0]))
+        self.hasher = ZobristHasher(self.board.size)
+        self.transpositionTable = TranspositionTable()
         self.respond()
 
     def showboard_cmd(self, args):
@@ -302,8 +304,6 @@ class GtpConnection:
 
     def gogui_rules_board_size_cmd(self, args):
         self.respond(str(self.board.size))
-        self.hasher.newBoardSize(self.board.size)
-        self.transpositionTable = TranspositionTable()
 
     def gogui_rules_legal_moves_cmd(self, args):
         if self.board.detect_five_in_a_row() != EMPTY:
