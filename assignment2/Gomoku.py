@@ -36,8 +36,8 @@ class Gomoku():
         self.name = "GomokuAssignment2"
         self.version = 2.0
 
-    def get_move(self, board, color, timelimit):
-        outcome, move = self.solve(board, timelimit)
+    def get_move(self, board, color, timelimit, tTable, hasher):
+        outcome, move = self.solve(board, timelimit, tTable, hasher)
 
         if move is not None:
             return move
