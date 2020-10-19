@@ -31,7 +31,7 @@ class Gomoku():
             version number (used by the GTP interface).
         """
         self.name = "GomokuAssignment2"
-        self.version = 1.0
+        self.version = 2.0
 
     def get_move(self, board, color, timelimit):
         outcome, move = self.solve(board, timelimit)

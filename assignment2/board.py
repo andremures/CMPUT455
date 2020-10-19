@@ -24,6 +24,7 @@ from board_util import (
     MAXSIZE,
     GO_POINT
 )
+from evaluation import evaluate
 
 """
 The GoBoard class implements a board and basic functions to play
@@ -211,7 +212,8 @@ class GoBoard(object):
         if win_color != EMPTY:
             return -10000000
 
-        return 0
+        # Heuristic
+        return evaluate(self, self.current_player)
 
     def play_move(self, point, color):
         """
