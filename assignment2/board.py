@@ -154,7 +154,14 @@ class GoBoard(object):
         self.current_player = GoBoardUtil.opponent(self.current_player)
 
     def get_best_moves(self):
-        return GoBoardUtil.generate_legal_moves(self, self.current_player)
+        moves = GoBoardUtil.generate_legal_moves(self, self.current_player)
+        return sorted(moves, key=self._move_score, reverse=True)
+
+    def _move_score(self, m):
+        self.play_move(m, self.current_player)
+        score = -self.evaluate()
+        self.undo_move(m)
+        return score
 
     def end_of_game(self):
         if self.get_empty_points().size == 0:
