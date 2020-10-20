@@ -161,9 +161,8 @@ class GtpConnection:
 
     def respond(self, response=""):
         """ Send response to stdout """
-        if response != "":
-            stdout.write("= {}\n\n".format(response))
-            stdout.flush()
+        stdout.write("= {}\n\n".format(response))
+        stdout.flush()
 
     def reset(self, size):
         """
