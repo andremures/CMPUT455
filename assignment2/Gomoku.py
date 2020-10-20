@@ -8,8 +8,6 @@ from board_util import GoBoardUtil
 from board import GoBoard
 from alphabeta import call_alphabeta
 
-import cProfile
-
 def handler(signum, frame):
     raise TimeoutException
 
@@ -78,5 +76,4 @@ def run():
 
 
 if __name__ == "__main__":
-    # run()
-    cProfile.run('run()')
+    run()
