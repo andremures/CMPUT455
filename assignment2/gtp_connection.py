@@ -204,6 +204,8 @@ class GtpConnection:
         if self.board.size != self.oldBoardSize:
             self.hasher = ZobristHasher(self.board.size)
             self.transpositionTable = TranspositionTable()
+            
+        self.oldBoardSize = self.board.size
         self.respond()
 
     def showboard_cmd(self, args):
