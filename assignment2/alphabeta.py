@@ -27,9 +27,14 @@ def alphabeta(state, alpha, beta, tTable, hasher):
         if value > alpha:
             alpha = value
             best_move = m
+
         state.undo_move(m)
         if value >= beta:
+            hashCodeNew2 = hasher.hash(GoBoardUtil.get_oneD_board(state))
+            storeResult(tTable,hashCode,beta)
             return beta, m
+    
+    storeResult(tTable,hashCode,alpha)
     return alpha, best_move
 
 
