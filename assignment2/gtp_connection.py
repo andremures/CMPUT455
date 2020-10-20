@@ -41,6 +41,7 @@ class GtpConnection:
         self.time_limit = 30
         self.hasher = ZobristHasher(self.board.size)
         self.transpositionTable = TranspositionTable()
+        self.oldBoardSize = self.board.size
 
         self.commands = {
             "protocol_version": self.protocol_version_cmd,
@@ -200,8 +201,9 @@ class GtpConnection:
         Reset the game with new boardsize args[0]
         """
         self.reset(int(args[0]))
-        self.hasher = ZobristHasher(self.board.size)
-        self.transpositionTable = TranspositionTable()
+        if self.board.size != self.oldBoardSize:
+            self.hasher = ZobristHasher(self.board.size)
+            self.transpositionTable = TranspositionTable()
         self.respond()
 
     def showboard_cmd(self, args):
