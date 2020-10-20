@@ -45,9 +45,9 @@ class Gomoku():
             return GoBoardUtil.generate_random_move(board, color)
 
     def solve(self, board, timelimit, tTable, hasher):
-        print(tTable.returnTable())
+        # print(tTable.returnTable())
         board_copy = board.copy()
-        signal.alarm(timelimit)  # sets an alram for the given time_limit
+        signal.alarm(timelimit)  # sets an alarm for the given time_limit
         try:
             score, move = call_alphabeta(board, tTable, hasher)
 

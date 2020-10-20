@@ -4,45 +4,47 @@ from gtp_connection import format_point, point_to_coord
 INFINITY = 100000
 
 
-def alphabeta(state, alpha, beta, tTable, hasher):
-
+def alphabeta(state, alpha, beta, tt, hasher):
     hashCode = hasher.hash(GoBoardUtil.get_oneD_board(state))
-    result = tTable.lookup(hashCode)
+    result = tt.lookup(hashCode)
 
-    if result != None:
-        return result, None
+    if result is not None:
+        return result
 
     if state.end_of_game():
-        result = state.evaluate()
-        storeResult(tTable,hashCode,result)
-        return result, None
+        result = state.evaluate(), None
+        storeResult(tt, hashCode, result)
+        return result
 
     moves = state.get_best_moves()
     best_move = moves[0]
 
     for m in moves:
         state.play_move(m, state.current_player)
-        value, _ = alphabeta(state, -beta, -alpha, tTable, hasher)
+        value, _ = alphabeta(state, -beta, -alpha, tt, hasher)
         value = -value
         if value > alpha:
             alpha = value
             best_move = m
         state.undo_move(m)
         if value >= beta:
-            return beta, m
-    
-    storeResult(tTable,hashCode,alpha)
-    return alpha, best_move
+            result = beta, m
+            storeResult(tt, hashCode, result)
+            return result
+
+    result = alpha, best_move
+    storeResult(tt, hashCode, result)
+    return result
 
 
 # initial call with full window
-def call_alphabeta(rootState, tTable, hasher):
+def call_alphabeta(rootState, tt, hasher):
     # best_moves = rootState.get_best_moves()
     # best_moves = list(map(lambda p: format_point(point_to_coord(p, rootState.size)), best_moves))
     # print("best moves: {}".format(best_moves))
-    return alphabeta(rootState, -INFINITY, INFINITY, tTable, hasher)
+    return alphabeta(rootState, -INFINITY, INFINITY, tt, hasher)
 
 
-def storeResult(tTable, code, result):
-    tTable.store(code, result)
+def storeResult(tt, code, result):
+    tt.store(code, result)
     return result
