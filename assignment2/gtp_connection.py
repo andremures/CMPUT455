@@ -18,7 +18,6 @@ from board_util import (
     MAXSIZE,
     coord_to_point,
 )
-import numpy as np
 import re
 from transpositiontable import TranspositionTable, ZobristHasher
 

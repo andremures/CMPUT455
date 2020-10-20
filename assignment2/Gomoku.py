@@ -7,7 +7,6 @@ from gtp_connection import GtpConnection, color_to_string, format_point, point_t
 from board_util import GoBoardUtil
 from board import GoBoard
 from alphabeta import call_alphabeta
-from transpositiontable import TranspositionTable, ZobristHasher
 
 import cProfile
 

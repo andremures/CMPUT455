@@ -39,28 +39,5 @@ class ZobristHasher:
         
         return hashCode
 
-"""
-# some code that runs hasher, initial call makes the zobrist array that is used for xor calls, otherwise
-# just pass through a board, has to be a 1D of size boardSize*boardSize
-# let me know if need to make changes !!!
-hasher = ZobristHasher(2)
-print(hasher.returnZobristBoardArray())
-print(hasher.hash([1,1,2,1]))
-print(hasher.hash([1,1,2,1]))
-print(hasher.hash([2,2,2,2]))
-print(hasher.hash([0,0,0,0]))
-print(hasher.hash([0,1,0,1]))
-# different input causes unique values, as expected
-
-hasher.newBoardSize(19)
-print(hasher.returnZobristBoardArray())
-newBoard = []
-
-for i in range(19*19):
-    newBoard.append(random.randint(0,2))
-
-print(hasher.hash(newBoard))
-
-"""
 
 

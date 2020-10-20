@@ -1,6 +1,5 @@
 
 from board_util import GoBoardUtil
-from gtp_connection import format_point, point_to_coord
 INFINITY = 100000
 
 
@@ -39,9 +38,6 @@ def alphabeta(state, alpha, beta, tt, hasher):
 
 # initial call with full window
 def call_alphabeta(rootState, tt, hasher):
-    # best_moves = rootState.get_best_moves()
-    # best_moves = list(map(lambda p: format_point(point_to_coord(p, rootState.size)), best_moves))
-    # print("best moves: {}".format(best_moves))
     return alphabeta(rootState, -INFINITY, INFINITY, tt, hasher)
 
 
