@@ -1,0 +1,29 @@
+Script started on Mon Oct 19 23:32:22 2020
+
+The default interactive shell is now zsh.
+To update your account to use zsh, please run `chsh -s /bin/zsh`.
+For more details, please visit https://support.apple.com/kb/HT208050.
+[?1034hbash-3.2$ mkdir fresh[K[K[K[K[Knewdir[K[K[K[K[K[Kpresubmission
+bash-3.2$ cp assignment2.tgz presubmission
+bash-3.2$ cd presubmission
+bash-3.2$ tar -xvf assignment2.tgz 
+x submission/
+x submission/board.py
+x submission/board_util.py
+x submission/Gomoku.py
+x submission/evaluation.py
+x submission/gtp_connection.py
+x submission/alphabeta.py
+x submission/transpositiontable.py
+x submission/assignment2-public-tests.gtp
+x submission/readme.txt
+bash-3.2$ cd submission/
+bash-3.2$ ls
+Gomoku.py			board.py			gtp_connection.py
+alphabeta.py			board_util.py			readme.txt
+assignment2-public-tests.gtp	evaluation.py			transpositiontable.py
+bash-3.2$ gogui-regress Go[K[K./Gomoku.py assignment2-public-tests.gtp 
+bash-3.2$ exit
+exit
+
+Script done on Mon Oct 19 23:36:48 2020
