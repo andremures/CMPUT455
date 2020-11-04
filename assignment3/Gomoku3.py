@@ -77,6 +77,36 @@ class Gomoku():
         # return the winning colour
         return board.detect_five_in_a_row()
 
+    @staticmethod
+    def rule_based_move(board, color):
+        """
+        best move = None
+        best move score = 0
+        for each legal move:
+            play move
+            move score = check move
+            if move score = 4 (win):
+                return move
+            if move score > best move score:
+                best move = move
+                best move score = move score
+            undo move
+
+        if best move is None:
+            return random move
+        return best move
+        """
+
+    def check_move(board, move):
+        """
+        returns:
+            4 if winning
+            3 if block win
+            2 if open four
+            1 if block open four
+            0 if random (otherwise)
+        """
+
 def run():
     """
     start the gtp connection and wait for commands.
