@@ -287,9 +287,11 @@ class GtpConnection:
         found_block_open_four = False
 
         for move in moves:
-
+            opp_color = GoBoardUtil.opponent(color)
             test_board = board.copy()
             test_board.play_move(move, color)
+            test_board2 = board.copy()
+            test_board2.play_move(move, opp_color)
 
             # check for win
             check_win = test_board.detect_five_in_a_row()
@@ -299,7 +301,10 @@ class GtpConnection:
         
             if not found_win:
                 # check if move blocks a win
-                found_block_win = True
+                check_win = test_board2.detect_five_in_a_row()
+                if check_win == BLACK or check_win == WHITE:
+                    block_win.append(move)
+                    found_block_win = True
 
             if not found_win and not found_block_win:
                 # check if move creates an open four
