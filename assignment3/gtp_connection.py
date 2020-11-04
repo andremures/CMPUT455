@@ -272,6 +272,54 @@ class GtpConnection:
         else:
             self.respond("Illegal move: {}".format(move_as_string))
 
+    def rule_based(self, board, color):
+        orignal_board = board.copy()
+        moves = board.get_empty_points()
+
+        win = []
+        block_win = []
+        open_four = []
+        block_open_four = []
+
+        found_win = False
+        found_block_win = False
+        found_open_four = False
+        found_block_open_four = False
+
+        for move in moves:
+
+            test_board = board.copy()
+            test_board.play_move(move, color)
+
+            # check for win
+            check_win = test_board.detect_five_in_a_row()
+            if check_win == BLACK or check_win == WHITE:
+                win.append(move)
+                found_win = True
+        
+            if not found_win:
+                # check if move blocks a win
+                found_block_win = True
+
+            if not found_win and not found_block_win:
+                # check if move creates an open four
+                found_open_four = True
+
+            if not found_win and not found_block_win and not found_open_four:
+                # check if move blocks an open four
+                found_block_open_four = True
+
+        if found_win:
+            return "Win", win
+        elif found_block_win:
+            return "BlockWin", block_win
+        elif found_open_four:
+            return "OpenFour", open_four
+        elif found_block_open_four:
+            return "BlockOpenFour", block_open_four
+        else:
+            return "Random", moves
+           
     def gogui_rules_game_id_cmd(self, args):
         self.respond("Gomoku")
 

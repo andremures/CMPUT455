@@ -370,3 +370,12 @@ class GoBoard(object):
             if counter == 5 and prev != EMPTY:
                 return prev
         return EMPTY
+
+    def end_of_game(self):
+        if self.get_empty_points().size == 0:
+            return True
+        result = self.detect_five_in_a_row()
+        if result == BLACK or result == WHITE:
+            return True
+        else:
+            return False
