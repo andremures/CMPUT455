@@ -97,8 +97,10 @@ class Gomoku():
         return best move
         """
 
-    def check_move(board, move):
+    @staticmethod
+    def check_move(board, move, best_move_score):
         """
+        returns if move is better than best move
         returns:
             4 if winning
             3 if block win
@@ -106,6 +108,20 @@ class Gomoku():
             1 if block open four
             0 if random (otherwise)
         """
+
+# compute upon new board size
+def generate_lines(size):
+    """
+    boardLines = []
+    for p in range(size * size):
+        pointLines =
+            horzontalLines(p) +
+            verticalLines(p) +
+            diag1Lines(p) +
+            diag2Lines(p)
+        boardLines.append(pointLines)
+    return boardLines
+    """
 
 def run():
     """
