@@ -36,6 +36,7 @@ class GtpConnection:
         """
         self._debug_mode = debug_mode
         self.go_engine = go_engine
+        self.policy = "random"
         self.board = board
         self.commands = {
             "protocol_version": self.protocol_version_cmd,
@@ -48,6 +49,8 @@ class GtpConnection:
             "version": self.version_cmd,
             "known_command": self.known_command_cmd,
             "genmove": self.genmove_cmd,
+            "policy": self.policy_cmd,
+            "policy_moves": self.policy_moves_cmd,
             "list_commands": self.list_commands_cmd,
             "play": self.play_cmd,
             "legal_moves": self.legal_moves_cmd,
@@ -271,6 +274,41 @@ class GtpConnection:
             self.respond(move_as_string.lower())
         else:
             self.respond("Illegal move: {}".format(move_as_string))
+
+    def policy_cmd(self, args):
+        if args[0] != "random" and args[0] != "rulebased":
+            self.respond("invalid policy! Please use valid policytype: random or rulebased")
+        else:
+            self.policy = args[0]
+            self.respond("policy set to " + self.policy)
+
+    def policy_moves_cmd(self, args):
+        # checks for game over
+        if self.board.detect_five_in_a_row() != EMPTY:
+            self.respond("")
+            return
+        # set for Random as defualt
+        move_type = "Random"
+        move_list = self.board.get_empty_points()
+        if move_list.size == 0:
+            self.respond("")
+            return
+        # change moves to rulebased if policy type is rulebased 
+        if self.policy == "rulebased":
+            move_type, move_list = self.rule_based(self.board,self.board.current_player)
+        
+        # sort the move list
+        output = []
+        for move in move_list:
+            move_coord = point_to_coord(move, self.board.size)
+            output.append(format_point(move_coord))
+        output.sort()
+        output_str = move_type
+        for move_string in output:
+            output_str += " " + move_string
+
+        self.respond(output_str)
+        return 
 
     def rule_based(self, board, color):
         orignal_board = board.copy()
