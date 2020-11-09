@@ -1,0 +1,4 @@
+boardsize 7
+showboard
+genmove b
+
