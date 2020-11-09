@@ -324,5 +324,32 @@ class GoBoard(object):
         col = pt % (size + 1) - 1
         return row * size + col
 
-    # def detect_five_in_a_row(self):
-    #     rows =
+    def check_win(self, move):
+        newPoint = self.unpadded_point(move)
+        lines = self.boardLines[newPoint]
+        for line in lines:
+            b_count, w_count, e_count = self.get_counts(line)
+            if b_count == 5:
+                return BLACK
+            elif w_count == 5:
+                return WHITE
+            else:
+                return EMPTY
+
+    def get_counts(self, five_line):
+        b_count = 0
+        w_count = 0
+        e_count = 0
+
+        # print(five_line)
+        for p in five_line:
+            stone = self.board[p]
+            # print(stone)
+            if stone == BLACK:
+                b_count += 1
+            elif stone == WHITE:
+                w_count += 1
+            else:
+                e_count += 1
+
+        return b_count, w_count, e_count

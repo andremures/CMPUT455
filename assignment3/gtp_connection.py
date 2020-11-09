@@ -293,75 +293,38 @@ class GtpConnection:
         if move_list.size == 0:
             self.respond("")
             return
-        # change moves to rulebased if policy type is rulebased 
-        if self.policy == "rulebased":
-            move_type, move_list = self.rule_based(self.board,self.board.current_player)
+        # change moves to rule_based if policy type is rule_based 
+        if self.policy == "rule_based":
+            move_list = self.rule_based_moves(self.board, self.board.current_player)
         
-        # sort the move list
+        # get best moves
         output = []
-        for move in move_list:
-            move_coord = point_to_coord(move, self.board.size)
-            output.append(format_point(move_coord))
-        output.sort()
-        output_str = move_type
-        for move_string in output:
-            output_str += " " + move_string
+        # for move in move_list:
+        #     move_coord = point_to_coord(move, self.board.size)
+        #     output.append(format_point(move_coord))
+        # output.sort()
+        # output_str = move_type
+        # for move_string in output:
+        #     output_str += " " + move_string
 
-        self.respond(output_str)
-        return 
+        # self.respond(output_str)
+        return    
 
-    def rule_based(self, board, color):
-        orignal_board = board.copy()
-        moves = board.get_empty_points()
+    def rule_based_moves(self, board, color):
+        """
+        returns best move for color
+        """
+        moveResults = []
 
-        win = []
-        block_win = []
-        open_four = []
-        block_open_four = []
+        for move in board.get_empty_points():
+            moveScore = self.go_engine.check_move(board, color, move)
+            print("move: {}, moveScore: {}".format(move, moveScore))
+            moveResults.append((moveScore, move))
 
-        found_win = False
-        found_block_win = False
-        found_open_four = False
-        found_block_open_four = False
+        moveResults.sort(reverse = True, key = lambda x: x[0])
+        print(moveResults)
 
-        for move in moves:
-            opp_color = GoBoardUtil.opponent(color)
-            test_board = board.copy()
-            test_board.play_move(move, color)
-            test_board2 = board.copy()
-            test_board2.play_move(move, opp_color)
-
-            # check for win
-            check_win = test_board.detect_five_in_a_row()
-            if check_win == BLACK or check_win == WHITE:
-                win.append(move)
-                found_win = True
-        
-            if not found_win:
-                # check if move blocks a win
-                check_win = test_board2.detect_five_in_a_row()
-                if check_win == BLACK or check_win == WHITE:
-                    block_win.append(move)
-                    found_block_win = True
-
-            if not found_win and not found_block_win:
-                # check if move creates an open four
-                found_open_four = True
-
-            if not found_win and not found_block_win and not found_open_four:
-                # check if move blocks an open four
-                found_block_open_four = True
-
-        if found_win:
-            return "Win", win
-        elif found_block_win:
-            return "BlockWin", block_win
-        elif found_open_four:
-            return "OpenFour", open_four
-        elif found_block_open_four:
-            return "BlockOpenFour", block_open_four
-        else:
-            return "Random", moves
+        return moveResults
            
     def gogui_rules_game_id_cmd(self, args):
         self.respond("Gomoku")
