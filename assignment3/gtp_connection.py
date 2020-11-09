@@ -301,6 +301,7 @@ class GtpConnection:
             return
         # change moves to rule_based if policy type is rule_based 
         if self.policy == "rule_based":
+            print("yes move based")
             move_type, move_list = self.rule_based_move(self.board,self.board.current_player)
         
         # sort the move list
@@ -315,6 +316,109 @@ class GtpConnection:
 
         self.respond(output_str)
         return 
+    def rule_based_move(self, board, color):
+        """
+        returns best move for color
+        """
+        #bestMove = None
+        bestMoveType = RANDOM
+        # print(board.get_empty_points())
+        moves = []
+
+        for move in board.get_empty_points():
+            moveScore = self.check_move(board, color, move)
+            print('moveScore', moveScore)
+            if ((bestMoveType == WIN) and (moveScore == WIN)):
+                    moves.append(move)
+            elif ((bestMoveType != WIN) and (moveScore == WIN)):
+                bestMoveType = WIN
+                moves = []
+                moves.append(move)
+            elif ((bestMoveType == BLOCK_WIN) and (moveScore == BLOCK_WIN)):
+                moves.append(move)
+            elif ((bestMoveType!= WIN) and (bestMoveType != BLOCK_WIN) and (moveScore == BLOCK_WIN)):
+                bestMoveType = BLOCK_WIN
+                moves = []
+                moves.append(move)
+            elif((bestMoveType == OPEN_FOUR)  and  (moveScore == OPEN_FOUR)):
+                moves.append(move)
+            elif((bestMoveType!= WIN) and (bestMoveType != BLOCK_WIN) and (bestMoveType != OPEN_FOUR) and (moveScore == OPEN_FOUR)):
+                bestMoveType = OPEN_FOUR
+                moves = []
+                moves.append(move)
+            elif((bestMoveType == BLOCK_OPEN_FOUR)  and  (moveScore == BLOCK_OPEN_FOUR)):
+                moves.append(move)
+            elif((bestMoveType!= WIN) and (bestMoveType != BLOCK_WIN) and (bestMoveType != OPEN_FOUR) and (bestMoveType!= BLOCK_OPEN_FOUR) and (moveScore == BLOCK_OPEN_FOUR)):
+                bestMoveType = BLOCK_OPEN_FOUR
+                moves = []
+                moves.append(move)
+            else:
+                moves.append(move)
+
+        if (bestMoveType == WIN): 
+            bestMoveType = 'Win'
+        elif (bestMoveType == BLOCK_WIN):
+            bestMoveType = 'Block win'
+        elif (bestMoveType == BLOCK_OPEN_FOUR):
+            bestMoveType = 'Block open four'
+        elif (bestMoveType == OPEN_FOUR):
+            bestMoveType = 'Open four'
+        else:
+            bestMoveType = 'Random'
+        print('best move type', bestMoveType)
+        print('moves', moves)
+
+        return bestMoveType , moves  
+    
+    def check_move(self, board, color, move):
+        """
+        returns:
+            4 if winning
+            3 if block win
+            2 if open four
+            1 if block open four
+            0 otherwise (random)
+        """
+        newpoint = board.unpadded_point(move)
+        lines = board.boardLines[newpoint]
+        maxScore = RANDOM
+        for line in lines:
+            counts = self.get_counts(board, line)
+            if color == BLACK:
+                myCount, oppCount, openCount = counts
+            else:
+                oppCount, myCount, openCount = counts
+
+            if myCount == 4:
+                return WIN
+            elif oppCount == 4:
+                maxScore = max(BLOCK_WIN, maxScore)
+            elif myCount == 3 and oppCount == 0:
+                maxScore = max(OPEN_FOUR, maxScore)
+            elif myCount == 0 and oppCount == 3:
+                maxScore = max(BLOCK_OPEN_FOUR, maxScore)
+            else:
+                maxScore = max(RANDOM, maxScore)
+
+        return maxScore
+
+    @staticmethod
+    def get_counts(board, five_line):
+        b_count = 0
+        w_count = 0
+        e_count = 0
+
+        for p in five_line:
+            stone = board.board[p]
+            if stone == BLACK:
+                b_count += 1
+            elif stone == WHITE:
+                w_count += 1
+            else:
+                e_count += 1
+
+        return b_count, w_count, e_count
+
 
     def rule_based(self, board, color):
         orignal_board = board.copy()
@@ -368,6 +472,14 @@ class GtpConnection:
             return "BlockOpenFour", block_open_four
         else:
             return "Random", moves
+
+
+
+
+
+
+
+
            
     def gogui_rules_game_id_cmd(self, args):
         self.respond("Gomoku")
@@ -500,78 +612,3 @@ def color_to_int(c):
         raise KeyError("\"{}\" wrong color".format(c))
 
 
-def rule_based_move(self, board, color):
-    """
-    returns best move for color
-    """
-    #bestMove = None
-    bestMoveType = RANDOM
-    # print(board.get_empty_points())
-    moves = []
-
-
-    for move in board.get_empty_points():
-        moveScore = self.check_move(board, color, move)
-        if ((bestMoveType == WIN) and (moveScore == WIN)):
-                moves.append(move)
-        elif ((bestMoveType != WIN) and (moveScore == WIN)):
-            bestMoveType == WIN
-            moves = []
-            moves.append(move)
-        elif ((bestMoveType == BLOCK_WIN) and (moveScore == BLOCK_WIN)):
-            moves.append(move)
-        elif ((bestMoveType!= WIN) and (bestMoveType != BLOCK_WIN) and (moveScore == BLOCK_WIN)):
-            bestMoveType == BLOCK_WIN
-            moves = []
-            moves.append(move)
-        elif((bestMoveType == OPEN_FOUR)  and  (moveScore == OPEN_FOUR)):
-            moves.append(move)
-        elif((bestMoveType!= WIN) and (bestMoveType != BLOCK_WIN)   and (bestMoveType!= BLOCK_OPEN_FOUR)  and (moveScore == BLOCK_OPEN_FOUR)):
-            bestMoveType == BLOCK_OPEN_FOUR
-            moves = []
-            moves.append(move)
-        elif((bestMoveType==RANDOM)):
-            moves.append(move)
-
-            
-        #if moveScore > bestMoveScore:
-        #    bestMove = move
-        #    bestMoveScore = moveScore
-
-
-    if bestMove is None:
-        return GoBoardUtil.generate_random_move(board, color)
-    else:
-        return bestMove
-
-def check_move(self, board, color, move):
-    """
-    returns:
-        4 if winning
-        3 if block win
-        2 if open four
-        1 if block open four
-        0 otherwise (random)
-    """
-    newpoint = board.unpadded_point(move)
-    lines = board.boardLines[newpoint]
-    maxScore = RANDOM
-    for line in lines:
-        counts = self.get_counts(board, line)
-        if color == BLACK:
-            myCount, oppCount, openCount = counts
-        else:
-            oppCount, myCount, openCount = counts
-
-        if myCount == 4:
-            return WIN
-        elif oppCount == 4:
-            maxScore = max(BLOCK_WIN, maxScore)
-        elif myCount == 3 and oppCount == 0:
-            maxScore = max(OPEN_FOUR, maxScore)
-        elif myCount == 0 and oppCount == 3:
-            maxScore = max(BLOCK_OPEN_FOUR, maxScore)
-        else:
-            maxScore = max(RANDOM, maxScore)
-
-    return maxScore
