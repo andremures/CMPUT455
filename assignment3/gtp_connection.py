@@ -359,11 +359,11 @@ class GtpConnection:
         if (bestMoveType == WIN): 
             bestMoveType = 'Win'
         elif (bestMoveType == BLOCK_WIN):
-            bestMoveType = 'Block win'
+            bestMoveType = 'BlockWin'
         elif (bestMoveType == BLOCK_OPEN_FOUR):
-            bestMoveType = 'Block open four'
+            bestMoveType = 'BlockOpenFour'
         elif (bestMoveType == OPEN_FOUR):
-            bestMoveType = 'Open four'
+            bestMoveType = 'OpenFour'
         else:
             bestMoveType = 'Random'
         print('best move type', bestMoveType)
