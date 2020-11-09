@@ -39,9 +39,15 @@ class GoBoard(object):
         """
         Creates a Go board of given size
         """
-        assert 2 <= size <= MAXSIZE
+        assert 5 <= size <= MAXSIZE
         self.reset(size)
-        self.calculate_rows_cols_diags()
+
+    def calculate_rows_cols_diags(self):
+        if self.size < 5:
+            return
+        # precalculate all rows, cols, and diags for 5-in-a-row detection
+        self.rows = []
+        self.cols = []
 
     def calculate_rows_cols_diags(self):
         if self.size < 5:
@@ -118,6 +124,8 @@ class GoBoard(object):
         self.board = np.full(self.maxpoint, BORDER, dtype=GO_POINT)
         self._initialize_empty_points(self.board)
         self.calculate_rows_cols_diags()
+        self.boardLines = self.generate_lines()
+
 
     def copy(self):
         b = GoBoard(self.size)
@@ -127,6 +135,7 @@ class GoBoard(object):
         b.last_move = self.last_move
         b.last2_move = self.last2_move
         b.current_player = self.current_player
+        b.boardLines = self.boardLines
         assert b.maxpoint == self.maxpoint
         b.board = np.copy(self.board)
         return b
@@ -152,6 +161,7 @@ class GoBoard(object):
         Return:
             The empty points on the board
         """
+        # print(self.board)
         return where1d(self.board == EMPTY)
 
     def get_color_points(self, color):
@@ -177,90 +187,6 @@ class GoBoard(object):
             start = self.row_start(row)
             board[start : start + self.size] = EMPTY
 
-    def is_eye(self, point, color):
-        """
-        Check if point is a simple eye for color
-        """
-        if not self._is_surrounded(point, color):
-            return False
-        # Eye-like shape. Check diagonals to detect false eye
-        opp_color = GoBoardUtil.opponent(color)
-        false_count = 0
-        at_edge = 0
-        for d in self._diag_neighbors(point):
-            if self.board[d] == BORDER:
-                at_edge = 1
-            elif self.board[d] == opp_color:
-                false_count += 1
-        return false_count <= 1 - at_edge  # 0 at edge, 1 in center
-
-    def _is_surrounded(self, point, color):
-        """
-        check whether empty point is surrounded by stones of color
-        (or BORDER) neighbors
-        """
-        for nb in self._neighbors(point):
-            nb_color = self.board[nb]
-            if nb_color != BORDER and nb_color != color:
-                return False
-        return True
-
-    def _has_liberty(self, block):
-        """
-        Check if the given block has any liberty.
-        block is a numpy boolean array
-        """
-        for stone in where1d(block):
-            empty_nbs = self.neighbors_of_color(stone, EMPTY)
-            if empty_nbs:
-                return True
-        return False
-
-    def _block_of(self, stone):
-        """
-        Find the block of given stone
-        Returns a board of boolean markers which are set for
-        all the points in the block
-        """
-        color = self.get_color(stone)
-        assert is_black_white(color)
-        return self.connected_component(stone)
-
-    def connected_component(self, point):
-        """
-        Find the connected component of the given point.
-        """
-        marker = np.full(self.maxpoint, False, dtype=bool)
-        pointstack = [point]
-        color = self.get_color(point)
-        assert is_black_white_empty(color)
-        marker[point] = True
-        while pointstack:
-            p = pointstack.pop()
-            neighbors = self.neighbors_of_color(p, color)
-            for nb in neighbors:
-                if not marker[nb]:
-                    marker[nb] = True
-                    pointstack.append(nb)
-        return marker
-
-    def _detect_and_process_capture(self, nb_point):
-        """
-        Check whether opponent block on nb_point is captured.
-        If yes, remove the stones.
-        Returns the stone if only a single stone was captured,
-        and returns None otherwise.
-        This result is used in play_move to check for possible ko
-        """
-        single_capture = None
-        opp_block = self._block_of(nb_point)
-        if not self._has_liberty(opp_block):
-            captures = list(where1d(opp_block))
-            self.board[captures] = EMPTY
-            if len(captures) == 1:
-                single_capture = nb_point
-        return single_capture
-
     def play_move(self, point, color):
         """
         Play a move of color on point
@@ -276,52 +202,15 @@ class GoBoard(object):
             return True
         elif self.board[point] != EMPTY:
             return False
-        # if point == self.ko_recapture:
-        #     return False
-
-        # General case: deal with captures, suicide, and next ko point
-        # opp_color = GoBoardUtil.opponent(color)
-        # in_enemy_eye = self._is_surrounded(point, opp_color)
         self.board[point] = color
-        # single_captures = []
-        # neighbors = self._neighbors(point)
-        # for nb in neighbors:
-        #     if self.board[nb] == opp_color:
-        #         single_capture = self._detect_and_process_capture(nb)
-        #         if single_capture != None:
-        #             single_captures.append(single_capture)
-        # block = self._block_of(point)
-        # if not self._has_liberty(block):  # undo suicide move
-        #     self.board[point] = EMPTY
-        #     return False
-        # self.ko_recapture = None
-        # if in_enemy_eye and len(single_captures) == 1:
-        #     self.ko_recapture = single_captures[0]
         self.current_player = GoBoardUtil.opponent(color)
         self.last2_move = self.last_move
         self.last_move = point
         return True
 
-    def neighbors_of_color(self, point, color):
-        """ List of neighbors of point of given color """
-        nbc = []
-        for nb in self._neighbors(point):
-            if self.get_color(nb) == color:
-                nbc.append(nb)
-        return nbc
-
-    def _neighbors(self, point):
-        """ List of all four neighbors of the point """
-        return [point - 1, point + 1, point - self.NS, point + self.NS]
-
-    def _diag_neighbors(self, point):
-        """ List of all four diagonal neighbors of point """
-        return [
-            point - self.NS - 1,
-            point - self.NS + 1,
-            point + self.NS - 1,
-            point + self.NS + 1,
-        ]
+    def undo_move(self, move):
+        self.board[move] = EMPTY
+        self.current_player = GoBoardUtil.opponent(self.current_player)
 
     def last_board_moves(self):
         """
@@ -370,3 +259,70 @@ class GoBoard(object):
             if counter == 5 and prev != EMPTY:
                 return prev
         return EMPTY
+
+    # compute upon new board size
+    def generate_lines(self):
+        boardLines = []
+        size = self.size
+        for p in range(size * size):
+            pointLines = \
+                self.horzontalLines(p) + \
+                self.verticalLines(p) + \
+                self.diagLines(p, size + 1) + \
+                self.diagLines(p, size - 1)
+            boardLines.append(pointLines)
+        # print("length of boardLines: {}".format(len(boardLines)))
+        return boardLines
+
+    def horzontalLines(self, pt):
+        lines = []
+        size = self.size
+        start = max(pt - 4, pt - (pt % size))
+        end = min(pt + 4, size * (pt // size + 1) - 1)
+
+        for i in range(end - start - 3):
+            lines.append(list(map(self.padded_point, range(start + i, start + i + 5))))
+
+        return lines
+
+    def verticalLines(self, pt):
+        lines = []
+        size = self.size
+        start = max(pt - (4 * size), pt % size)
+        end = min(pt + (4 * size), (size - 1) * size + (pt % size))
+
+        for i in range(start, end - (4 * size) + 1, size):
+            lines.append(list(map(self.padded_point, range(i, i + (4 * size) + 1, size))))
+
+        return lines
+
+    def diagLines(self, pt, dir):
+        lines = []
+        size = self.size
+        row = pt // size
+        col = pt % size
+        maxBackwardDist = min(row, size - col - 1, 4)
+        maxForwardDist = min(size - row - 1, col, 4)
+        start = pt - maxBackwardDist * dir
+        end = pt + maxForwardDist * dir
+
+        for i in range(start, end - (4 * dir) + 1, dir):
+            lines.append(list(map(self.padded_point, range(i, i + (4 * dir) + 1, dir))))
+
+        return lines
+
+    def padded_point(self, pt):
+        # convert point in board to padded board point
+        size = self.size
+        row = (pt // size) + 1
+        col = (pt % size) + 1
+        return row * (size + 1) + col
+
+    def unpadded_point(self, pt):
+        size = self.size
+        row = pt // (size + 1) - 1
+        col = pt % (size + 1) - 1
+        return row * size + col
+
+    # def detect_five_in_a_row(self):
+    #     rows =
