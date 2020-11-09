@@ -21,6 +21,12 @@ from board_util import (
 import numpy as np
 import re
 
+WIN = 4
+BLOCK_WIN = 3
+OPEN_FOUR = 2
+BLOCK_OPEN_FOUR = 1
+RANDOM = 0
+
 
 class GtpConnection:
     def __init__(self, go_engine, board, debug_mode=False):
@@ -276,8 +282,8 @@ class GtpConnection:
             self.respond("Illegal move: {}".format(move_as_string))
 
     def policy_cmd(self, args):
-        if args[0] != "random" and args[0] != "rulebased":
-            self.respond("invalid policy! Please use valid policytype: random or rulebased")
+        if args[0] != "random" and args[0] != "rule_based":
+            self.respond("invalid policy! Please use valid policytype: random or rule_based")
         else:
             self.policy = args[0]
             self.respond("policy set to " + self.policy)
@@ -293,9 +299,9 @@ class GtpConnection:
         if move_list.size == 0:
             self.respond("")
             return
-        # change moves to rulebased if policy type is rulebased 
-        if self.policy == "rulebased":
-            move_type, move_list = self.rule_based(self.board,self.board.current_player)
+        # change moves to rule_based if policy type is rule_based 
+        if self.policy == "rule_based":
+            move_type, move_list = self.rule_based_move(self.board,self.board.current_player)
         
         # sort the move list
         output = []
@@ -492,3 +498,80 @@ def color_to_int(c):
         return color_to_int[c]
     except:
         raise KeyError("\"{}\" wrong color".format(c))
+
+
+def rule_based_move(self, board, color):
+    """
+    returns best move for color
+    """
+    #bestMove = None
+    bestMoveType = RANDOM
+    # print(board.get_empty_points())
+    moves = []
+
+
+    for move in board.get_empty_points():
+        moveScore = self.check_move(board, color, move)
+        if ((bestMoveType == WIN) and (moveScore == WIN)):
+                moves.append(move)
+        elif ((bestMoveType != WIN) and (moveScore == WIN)):
+            bestMoveType == WIN
+            moves = []
+            moves.append(move)
+        elif ((bestMoveType == BLOCK_WIN) and (moveScore == BLOCK_WIN)):
+            moves.append(move)
+        elif ((bestMoveType!= WIN) and (bestMoveType != BLOCK_WIN) and (moveScore == BLOCK_WIN)):
+            bestMoveType == BLOCK_WIN
+            moves = []
+            moves.append(move)
+        elif((bestMoveType == OPEN_FOUR)  and  (moveScore == OPEN_FOUR)):
+            moves.append(move)
+        elif((bestMoveType!= WIN) and (bestMoveType != BLOCK_WIN)   and (bestMoveType!= BLOCK_OPEN_FOUR)  and (moveScore == BLOCK_OPEN_FOUR)):
+            bestMoveType == BLOCK_OPEN_FOUR
+            moves = []
+            moves.append(move)
+        elif((bestMoveType==RANDOM)):
+            moves.append(move)
+
+            
+        #if moveScore > bestMoveScore:
+        #    bestMove = move
+        #    bestMoveScore = moveScore
+
+
+    if bestMove is None:
+        return GoBoardUtil.generate_random_move(board, color)
+    else:
+        return bestMove
+
+def check_move(self, board, color, move):
+    """
+    returns:
+        4 if winning
+        3 if block win
+        2 if open four
+        1 if block open four
+        0 otherwise (random)
+    """
+    newpoint = board.unpadded_point(move)
+    lines = board.boardLines[newpoint]
+    maxScore = RANDOM
+    for line in lines:
+        counts = self.get_counts(board, line)
+        if color == BLACK:
+            myCount, oppCount, openCount = counts
+        else:
+            oppCount, myCount, openCount = counts
+
+        if myCount == 4:
+            return WIN
+        elif oppCount == 4:
+            maxScore = max(BLOCK_WIN, maxScore)
+        elif myCount == 3 and oppCount == 0:
+            maxScore = max(OPEN_FOUR, maxScore)
+        elif myCount == 0 and oppCount == 3:
+            maxScore = max(BLOCK_OPEN_FOUR, maxScore)
+        else:
+            maxScore = max(RANDOM, maxScore)
+
+    return maxScore
