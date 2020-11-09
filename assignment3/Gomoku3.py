@@ -29,7 +29,6 @@ class Gomoku():
         self.name = "GomokuAssignment3"
         self.version = 1.0
         self.numSimulations = 10
-        self.sims = 0
 
     def get_move(self, board, color):
         # generate a move using one-ply MC simulations
@@ -49,7 +48,6 @@ class Gomoku():
         # select the best move
         max_child = np.argmax(numMoveWins)
         return emptyPoints[max_child]
-        # return None
 
     def simulate_move(self, board, move, color):
         wins = 0
@@ -57,9 +55,6 @@ class Gomoku():
             result = self.simulate(board, move, color)
             if result == color:
                 wins += 1
-        self.sims += self.numSimulations
-        print(self.sims)
-        print("move: {} wins: {}".format(move, wins))
         return wins
 
     def simulate(self, board, move, color):
@@ -73,9 +68,7 @@ class Gomoku():
         passes = 0
 
         # simulate entire game to completion
-        gameWinner = board.detect_five_in_a_row()
-        emptyPoints = board.get_empty_points()
-        while gameWinner == EMPTY and emptyPoints != []:
+        while board.detect_five_in_a_row() == EMPTY and board.get_empty_points() != []:
             color = board.current_player
             # TODO: filter moves by rules
             move = self.rule_based_move(board, color)
@@ -120,15 +113,10 @@ class Gomoku():
             1 if block open four
             0 otherwise (random)
         """
-        # print("check move boardlines length: {}".format(len(board.boardLines)))
-        # print("move: {}".format(move))
         newpoint = board.unpadded_point(move)
-        # print("unpadded point: {}".format(newpoint))
         lines = board.boardLines[newpoint]
         maxScore = RANDOM
-        # print("move: {}".format(move))
         for line in lines:
-            # print("line: {}".format(line))
             counts = self.get_counts(board, line)
             if color == BLACK:
                 myCount, oppCount, openCount = counts
@@ -166,7 +154,6 @@ class Gomoku():
         return b_count, w_count, e_count
 
 
-
 def run():
     """
     start the gtp connection and wait for commands.
@@ -174,7 +161,7 @@ def run():
     board = GoBoard(7)
     con = GtpConnection(Gomoku(), board)
     con.start_connection()
-
+    
 
 if __name__ == "__main__":
     run()

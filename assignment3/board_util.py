@@ -55,7 +55,6 @@ For 1-d arrays, this is a singleton tuple.
 The [0] indexing is needed to extract the result from the singleton tuple.
 """
 def where1d(condition):
-    # print("np where: {}".format(np.where(condition)[0]))
     return np.where(condition)[0]
 
 
