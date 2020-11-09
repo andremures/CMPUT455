@@ -36,6 +36,7 @@ class GtpConnection:
         """
         self._debug_mode = debug_mode
         self.go_engine = go_engine
+        self.policy = "random"
         self.board = board
         self.commands = {
             "protocol_version": self.protocol_version_cmd,
@@ -48,6 +49,8 @@ class GtpConnection:
             "version": self.version_cmd,
             "known_command": self.known_command_cmd,
             "genmove": self.genmove_cmd,
+            "policy": self.policy_cmd,
+            "policy_moves": self.policy_moves_cmd,
             "list_commands": self.list_commands_cmd,
             "play": self.play_cmd,
             "legal_moves": self.legal_moves_cmd,
@@ -272,6 +275,94 @@ class GtpConnection:
         else:
             self.respond("Illegal move: {}".format(move_as_string))
 
+    def policy_cmd(self, args):
+        if args[0] != "random" and args[0] != "rulebased":
+            self.respond("invalid policy! Please use valid policytype: random or rulebased")
+        else:
+            self.policy = args[0]
+            self.respond("policy set to " + self.policy)
+
+    def policy_moves_cmd(self, args):
+        # checks for game over
+        if self.board.detect_five_in_a_row() != EMPTY:
+            self.respond("")
+            return
+        # set for Random as defualt
+        move_type = "Random"
+        move_list = self.board.get_empty_points()
+        if move_list.size == 0:
+            self.respond("")
+            return
+        # change moves to rulebased if policy type is rulebased 
+        if self.policy == "rulebased":
+            move_type, move_list = self.rule_based(self.board,self.board.current_player)
+        
+        # sort the move list
+        output = []
+        for move in move_list:
+            move_coord = point_to_coord(move, self.board.size)
+            output.append(format_point(move_coord))
+        output.sort()
+        output_str = move_type
+        for move_string in output:
+            output_str += " " + move_string
+
+        self.respond(output_str)
+        return 
+
+    def rule_based(self, board, color):
+        orignal_board = board.copy()
+        moves = board.get_empty_points()
+
+        win = []
+        block_win = []
+        open_four = []
+        block_open_four = []
+
+        found_win = False
+        found_block_win = False
+        found_open_four = False
+        found_block_open_four = False
+
+        for move in moves:
+            opp_color = GoBoardUtil.opponent(color)
+            test_board = board.copy()
+            test_board.play_move(move, color)
+            test_board2 = board.copy()
+            test_board2.play_move(move, opp_color)
+
+            # check for win
+            check_win = test_board.detect_five_in_a_row()
+            if check_win == BLACK or check_win == WHITE:
+                win.append(move)
+                found_win = True
+        
+            if not found_win:
+                # check if move blocks a win
+                check_win = test_board2.detect_five_in_a_row()
+                if check_win == BLACK or check_win == WHITE:
+                    block_win.append(move)
+                    found_block_win = True
+
+            if not found_win and not found_block_win:
+                # check if move creates an open four
+                found_open_four = True
+
+            if not found_win and not found_block_win and not found_open_four:
+                # check if move blocks an open four
+                found_block_open_four = True
+
+        if found_win:
+            return "Win", win
+        elif found_block_win:
+            return "BlockWin", block_win
+        elif found_open_four:
+            return "OpenFour", open_four
+        elif found_block_open_four:
+            return "BlockOpenFour", block_open_four
+        else:
+            return "Random", moves
+           
     def gogui_rules_game_id_cmd(self, args):
         self.respond("Gomoku")
 
