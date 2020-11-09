@@ -36,7 +36,7 @@ class Gomoku():
         emptyPoints = board.get_empty_points()
 
         # no more moves to pick from, so will pass
-        if emptyPoints == []:
+        if len(emptyPoints) == 0:
             return None
 
         # number of times the move has won
@@ -68,7 +68,7 @@ class Gomoku():
         passes = 0
 
         # simulate entire game to completion
-        while board.detect_five_in_a_row() == EMPTY and board.get_empty_points() != []:
+        while board.detect_five_in_a_row() == EMPTY and len(board.get_empty_points()) != 0:
             color = board.current_player
             # TODO: filter moves by rules
             move = self.rule_based_move(board, color)

@@ -327,6 +327,7 @@ class GtpConnection:
 
         for move in board.get_empty_points():
             moveScore = self.check_move(board, color, move)
+            print('move',move)
             print('moveScore', moveScore)
             if ((bestMoveType == WIN) and (moveScore == WIN)):
                     moves.append(move)
@@ -352,7 +353,7 @@ class GtpConnection:
                 bestMoveType = BLOCK_OPEN_FOUR
                 moves = []
                 moves.append(move)
-            else:
+            elif (bestMoveType==RANDOM):
                 moves.append(move)
 
         if (bestMoveType == WIN): 
