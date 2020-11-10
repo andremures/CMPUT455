@@ -124,7 +124,8 @@ class GoBoard(object):
         self.board = np.full(self.maxpoint, BORDER, dtype=GO_POINT)
         self._initialize_empty_points(self.board)
         self.calculate_rows_cols_diags()
-        self.boardLines = self.generate_lines()
+        self.boardLines5 = self.generate_lines(5)
+        self.boardLines6 = self.generate_lines(6)
 
 
     def copy(self):
@@ -135,7 +136,8 @@ class GoBoard(object):
         b.last_move = self.last_move
         b.last2_move = self.last2_move
         b.current_player = self.current_player
-        b.boardLines = self.boardLines
+        b.boardLines5 = self.boardLines5
+        b.boardLines6 = self.boardLines6
         assert b.maxpoint == self.maxpoint
         b.board = np.copy(self.board)
         return b
@@ -161,7 +163,6 @@ class GoBoard(object):
         Return:
             The empty points on the board
         """
-        # print(self.board)
         return where1d(self.board == EMPTY)
 
     def get_color_points(self, color):
@@ -261,53 +262,58 @@ class GoBoard(object):
         return EMPTY
 
     # compute upon new board size
-    def generate_lines(self):
+    def generate_lines(self, length):
         boardLines = []
         size = self.size
         for p in range(size * size):
             pointLines = \
-                self.horzontalLines(p) + \
-                self.verticalLines(p) + \
-                self.diagLines(p, size + 1) + \
-                self.diagLines(p, size - 1)
+                self.horizontal_lines(p, length) + \
+                self.vertical_lines(p, length) + \
+                self.diag_lines(p, size + 1, length) + \
+                self.diag_lines(p, size - 1, length)
             boardLines.append(pointLines)
-        # print("length of boardLines: {}".format(len(boardLines)))
         return boardLines
 
-    def horzontalLines(self, pt):
+    def horizontal_lines(self, pt, length):
         lines = []
         size = self.size
-        start = max(pt - 4, pt - (pt % size))
-        end = min(pt + 4, size * (pt // size + 1) - 1)
+        start = max(pt - (length - 1), pt - (pt % size))
+        end = min(pt + (length - 1), size * (pt // size + 1) - 1)
 
-        for i in range(end - start - 3):
-            lines.append(list(map(self.padded_point, range(start + i, start + i + 5))))
+        for i in range(end - start - (length - 2)):
+            lines.append(list(map(self.padded_point, range(start + i, start + i + length))))
 
         return lines
 
-    def verticalLines(self, pt):
+    def vertical_lines(self, pt, length):
         lines = []
-        size = self.size
-        start = max(pt - (4 * size), pt % size)
-        end = min(pt + (4 * size), (size - 1) * size + (pt % size))
+        size = self.size    
+        start = max(pt - ((length - 1) * size), pt % size)
+        end = min(pt + ((length - 1) * size), (size - 1) * size + (pt % size))
 
-        for i in range(start, end - (4 * size) + 1, size):
-            lines.append(list(map(self.padded_point, range(i, i + (4 * size) + 1, size))))
+        for i in range(start, end - ((length - 1) * size) + 1, size):
+            lines.append(list(map(self.padded_point, range(i, i + ((length - 1) * size) + 1, size))))
 
         return lines
 
-    def diagLines(self, pt, dir):
+    def diag_lines(self, pt, dir, length):
         lines = []
         size = self.size
         row = pt // size
         col = pt % size
-        maxBackwardDist = min(row, size - col - 1, 4)
-        maxForwardDist = min(size - row - 1, col, 4)
+
+        if dir == size - 1:
+            maxBackwardDist = min(row, size - col - 1, length - 1)
+            maxForwardDist = min(size - row - 1, col, length - 1)
+        else:
+            maxBackwardDist = min(row, col, length - 1)
+            maxForwardDist = min(size - row - 1, size - col - 1, length - 1)
+
         start = pt - maxBackwardDist * dir
         end = pt + maxForwardDist * dir
 
-        for i in range(start, end - (4 * dir) + 1, dir):
-            lines.append(list(map(self.padded_point, range(i, i + (4 * dir) + 1, dir))))
+        for i in range(start, end - ((length - 1) * dir) + 1, dir):
+            lines.append(list(map(self.padded_point, range(i, i + ((length - 1) * dir) + 1, dir))))
 
         return lines
 
@@ -326,7 +332,7 @@ class GoBoard(object):
 
     def check_win(self, move):
         newPoint = self.unpadded_point(move)
-        lines = self.boardLines[newPoint]
+        lines = self.boardLines5[newPoint]
         for line in lines:
             b_count, w_count, e_count = self.get_counts(line)
             if b_count == 5:
@@ -336,15 +342,13 @@ class GoBoard(object):
             else:
                 return EMPTY
 
-    def get_counts(self, five_line):
+    def get_counts(self, line):
         b_count = 0
         w_count = 0
         e_count = 0
 
-        # print(five_line)
-        for p in five_line:
+        for p in line:
             stone = self.board[p]
-            # print(stone)
             if stone == BLACK:
                 b_count += 1
             elif stone == WHITE:

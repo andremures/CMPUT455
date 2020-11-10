@@ -21,6 +21,11 @@ from board_util import (
 import numpy as np
 import re
 
+WIN = 4
+BLOCK_WIN = 3
+OPEN_FOUR = 2
+BLOCK_OPEN_FOUR = 1
+RANDOM = 0
 
 class GtpConnection:
     def __init__(self, go_engine, board, debug_mode=False):
@@ -276,8 +281,8 @@ class GtpConnection:
             self.respond("Illegal move: {}".format(move_as_string))
 
     def policy_cmd(self, args):
-        if args[0] != "random" and args[0] != "rulebased":
-            self.respond("invalid policy! Please use valid policytype: random or rulebased")
+        if args[0] != "random" and args[0] != "rule_based":
+            self.respond("invalid policy! Please use valid policytype: random or rule_based")
         else:
             self.policy = args[0]
             self.respond("policy set to " + self.policy)
@@ -289,8 +294,8 @@ class GtpConnection:
             return
         # set for Random as defualt
         move_type = "Random"
-        move_list = self.board.get_empty_points()
-        if move_list.size == 0:
+        empty_points = self.board.get_empty_points()
+        if empty_points.size == 0:
             self.respond("")
             return
         # change moves to rule_based if policy type is rule_based 
@@ -299,10 +304,37 @@ class GtpConnection:
         
         # get best moves
         output = []
+        bestMoveScore = RANDOM
+        for move in move_list:
+            if move[0] > bestMoveScore:
+                bestMoveScore = move[0]
+            if move[0] < bestMoveScore:
+                break
+            moveCoord = point_to_coord(move[1], self.board.size)
+            output.append(format_point(moveCoord))
+
+        if bestMoveScore == WIN:
+            output_str = "Win"
+        elif bestMoveScore == BLOCK_WIN:
+            output_str = "BlockWin"
+        elif bestMoveScore == OPEN_FOUR:
+            output_str = "OpenFour"
+        elif bestMoveScore == BLOCK_OPEN_FOUR:
+            output_str = "BlockOpenFour"
+        else: 
+            output_str = "Random"
+
+        for moveString in output:
+            output_str += " " + moveString
+        
+        self.respond(output_str)
+
+        # output = []
         # for move in move_list:
         #     move_coord = point_to_coord(move, self.board.size)
         #     output.append(format_point(move_coord))
         # output.sort()
+
         # output_str = move_type
         # for move_string in output:
         #     output_str += " " + move_string
@@ -312,17 +344,16 @@ class GtpConnection:
 
     def rule_based_moves(self, board, color):
         """
-        returns best move for color
+        returns array of results of each move for color
+        in form (move score, move)
         """
         moveResults = []
 
         for move in board.get_empty_points():
             moveScore = self.go_engine.check_move(board, color, move)
-            print("move: {}, moveScore: {}".format(move, moveScore))
             moveResults.append((moveScore, move))
 
         moveResults.sort(reverse = True, key = lambda x: x[0])
-        print(moveResults)
 
         return moveResults
            

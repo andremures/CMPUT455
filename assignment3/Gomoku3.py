@@ -33,11 +33,9 @@ class Gomoku():
         self.numSimulations = 10
 
     def get_move(self, board, color):
-        # print("get_move")
         # generate a move using one-ply MC simulations
         boardCopy = board.copy()
         emptyPoints = board.get_empty_points()
-        # sims = 0
 
         # no more moves to pick from, so will pass
         if emptyPoints == []:
@@ -48,9 +46,6 @@ class Gomoku():
         for move in emptyPoints:
             wins = self.simulate_move(boardCopy, move, color)
             numMoveWins.append(wins)
-
-            # print("sim: {}".format(sims))
-            # sims += 10
 
         # select the best move
         max_child = np.argmax(numMoveWins)
@@ -80,13 +75,10 @@ class Gomoku():
         passes = 0
         winningColor = EMPTY
 
-        ## board.detect_five_in_a_row() == EMPTY and 
-
         # simulate entire game to completion
         while board.get_empty_points() != []:
             color = board.current_player
             move, moveScore = self.rule_based_move(board, color)
-            # print("move: {}, score: {}".format(move, moveScore))
             # return color if they won
             if moveScore == WIN:
                 winningColor = color
@@ -130,29 +122,45 @@ class Gomoku():
             1 if block open four
             0 otherwise (random)
         """
-        newpoint = board.unpadded_point(move)
-        lines = board.boardLines[newpoint]
+
+        board.play_move(move, color)
+
+        newPoint = board.unpadded_point(move)
+        lines5 = board.boardLines5[newPoint]
         maxScore = RANDOM
-        for line in lines:
+        for line in lines5:
             counts = board.get_counts(line)
             if color == BLACK:
                 myCount, oppCount, openCount = counts
             else:
                 oppCount, myCount, openCount = counts
 
-            if myCount == 4:
+            if myCount == 5:
+                board.undo_move(move)
                 return WIN
-            elif oppCount == 4:
+            elif oppCount == 4 and myCount == 1:
                 maxScore = max(BLOCK_WIN, maxScore)
-            elif myCount == 3 and oppCount == 0:
-                maxScore = max(OPEN_FOUR, maxScore)
-            elif myCount == 0 and oppCount == 3:
-                maxScore = max(BLOCK_OPEN_FOUR, maxScore)
+
+        lines6 = board.boardLines6[newPoint]
+        oppColor = GoBoardUtil.opponent(color)
+        for line in lines6:
+            counts = board.get_counts(line)
+            if color == BLACK:
+                myCount, oppCount, openCount = counts
             else:
-                maxScore = max(RANDOM, maxScore)
+                oppCount, myCount, openCount = counts
+
+            firstColor = board.board[line[0]]
+            lastColor = board.board[line[-1]]
+
+            if myCount == 4 and firstColor == EMPTY and lastColor == EMPTY:
+                maxScore = max(OPEN_FOUR, maxScore)
+            elif myCount == 1 and oppCount == 3 and firstColor != oppColor and lastColor != oppColor:
+                maxScore = max(BLOCK_OPEN_FOUR, maxScore)
+
+        board.undo_move(move)
 
         return maxScore
-
 
 def run():
     """
