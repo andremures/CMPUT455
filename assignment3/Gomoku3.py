@@ -93,25 +93,60 @@ class Gomoku():
         # return the winning colour
         return winningColor
 
-    def rule_based_move(self, board, color):
+    def rule_based_moves(self, board, color):
         """
         returns best move for color
         """
-        bestMove = None
-        bestMoveScore = RANDOM
+        #bestMove = None
+        bestMoveType = RANDOM
+        # print(board.get_empty_points())
+        moves = []
 
         for move in board.get_empty_points():
             moveScore = self.check_move(board, color, move)
-            if moveScore == WIN:
-                return move, WIN
-            if moveScore > bestMoveScore:
-                bestMove = move
-                bestMoveScore = moveScore
+            print('move',move)
+            print('moveScore', moveScore)
+            if ((bestMoveType == WIN) and (moveScore == WIN)):
+                    moves.append(move)
+            elif ((bestMoveType != WIN) and (moveScore == WIN)):
+                bestMoveType = WIN
+                moves = []
+                moves.append(move)
+            elif ((bestMoveType == BLOCK_WIN) and (moveScore == BLOCK_WIN)):
+                moves.append(move)
+            elif ((bestMoveType!= WIN) and (bestMoveType != BLOCK_WIN) and (moveScore == BLOCK_WIN)):
+                bestMoveType = BLOCK_WIN
+                moves = []
+                moves.append(move)
+            elif((bestMoveType == OPEN_FOUR)  and  (moveScore == OPEN_FOUR)):
+                moves.append(move)
+            elif((bestMoveType!= WIN) and (bestMoveType != BLOCK_WIN) and (bestMoveType != OPEN_FOUR) and (moveScore == OPEN_FOUR)):
+                bestMoveType = OPEN_FOUR
+                moves = []
+                moves.append(move)
+            elif((bestMoveType == BLOCK_OPEN_FOUR)  and  (moveScore == BLOCK_OPEN_FOUR)):
+                moves.append(move)
+            elif((bestMoveType!= WIN) and (bestMoveType != BLOCK_WIN) and (bestMoveType != OPEN_FOUR) and (bestMoveType!= BLOCK_OPEN_FOUR) and (moveScore == BLOCK_OPEN_FOUR)):
+                bestMoveType = BLOCK_OPEN_FOUR
+                moves = []
+                moves.append(move)
+            elif (bestMoveType==RANDOM):
+                moves.append(move)
 
-        if bestMove is None:
-            return GoBoardUtil.generate_random_move(board, color), bestMoveScore
+        if (bestMoveType == WIN): 
+            bestMoveType = 'Win'
+        elif (bestMoveType == BLOCK_WIN):
+            bestMoveType = 'BlockWin'
+        elif (bestMoveType == BLOCK_OPEN_FOUR):
+            bestMoveType = 'BlockOpenFour'
+        elif (bestMoveType == OPEN_FOUR):
+            bestMoveType = 'OpenFour'
         else:
-            return bestMove, bestMoveScore
+            bestMoveType = 'Random'
+        print('best move type', bestMoveType)
+        print('moves', moves)
+
+        return bestMoveType , moves  
 
     def check_move(self, board, color, move):
         """
