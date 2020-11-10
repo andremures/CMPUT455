@@ -150,8 +150,6 @@ class GtpConnection:
 
     def respond(self, response=""):
         """ Send response to stdout """
-        if response == "":
-            return
         stdout.write("= {}\n\n".format(response))
         stdout.flush()
 
@@ -278,7 +276,7 @@ class GtpConnection:
         move_as_string = format_point(move_coord)
         if self.board.is_legal(move, color):
             self.board.play_move(move, color)
-            self.respond(move_as_string.lower())
+            self.respond(move_as_string)
         else:
             self.respond("Illegal move: {}".format(move_as_string))
 
@@ -324,6 +322,8 @@ class GtpConnection:
             output_str = "BlockOpenFour"
         else: 
             output_str = "Random"
+
+        output.sort()
 
         for moveString in output:
             output_str += " " + moveString

@@ -1,3 +1,4 @@
+policy rule_based
 clear_board
 boardsize 8
 play B D2

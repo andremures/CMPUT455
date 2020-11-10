@@ -181,7 +181,12 @@ class Gomoku():
             if myCount == 4 and firstColor == EMPTY and lastColor == EMPTY:
                 maxScore = max(OPEN_FOUR, maxScore)
             elif myCount == 1 and oppCount == 3 and firstColor != oppColor and lastColor != oppColor:
-                maxScore = max(BLOCK_OPEN_FOUR, maxScore)
+                colorLine = tuple(map(lambda m: board.board[m], line))
+                # must hard code these two cases, they are the only six line patterns that match
+                # the above rule, but do not block an open four
+                if colorLine != (color, EMPTY, oppColor, oppColor, oppColor, EMPTY) and \
+                   colorLine != (EMPTY, oppColor, oppColor, oppColor, EMPTY, color):
+                    maxScore = max(BLOCK_OPEN_FOUR, maxScore)
 
         board.undo_move(move)
 
