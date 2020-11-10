@@ -5,6 +5,7 @@
 from gtp_connection import GtpConnection
 from board_util import GoBoardUtil, PASS, EMPTY, BLACK, WHITE
 from board import GoBoard
+import random
 import numpy as np
 
 import cProfile
@@ -34,7 +35,6 @@ class Gomoku():
 
     def get_move(self, board, color):
         # generate a move using one-ply MC simulations
-        boardCopy = board.copy()
         emptyPoints = board.get_empty_points()
 
         # no more moves to pick from, so will pass
@@ -43,13 +43,14 @@ class Gomoku():
 
         # number of times the move has won
         numMoveWins = []
-        for move in emptyPoints:
-            wins = self.simulate_move(boardCopy, move, color)
+        bestMoves = self.rule_based_moves(board, color)
+        for _, move in bestMoves:
+            wins = self.simulate_move(board, move, color)
             numMoveWins.append(wins)
 
         # select the best move
         max_child = np.argmax(numMoveWins)
-        return emptyPoints[max_child]
+        return bestMoves[max_child][1]
 
     def simulate_move(self, board, move, color):
         wins = 0
@@ -65,53 +66,77 @@ class Gomoku():
         boardCopy = board.copy()
         boardCopy.play_move(move, color)
         # return the color if they won
-        if boardCopy.check_win(move) == color:
-            return color
+        # if board.check_win(move) == color:
+        #     return color
         # first player played move, now opponent plays
         opponent = GoBoardUtil.opponent(color)
-        return self.play_game(boardCopy, opponent)
-
-    def play_game(self, board, color):
+        
         passes = 0
         winningColor = EMPTY
 
         # simulate entire game to completion
-        while board.get_empty_points() != []:
-            color = board.current_player
-            move, moveScore = self.rule_based_move(board, color)
+        while boardCopy.get_empty_points() != []:
+            color = boardCopy.current_player
+            bestMoves = self.rule_based_moves(boardCopy, color)
+
+            moveScore, move = random.choice(bestMoves)
+
             # return color if they won
             if moveScore == WIN:
-                winningColor = color
+                return color
             
-            board.play_move(move, color)
+            boardCopy.play_move(move, color)
             if move == PASS:
                 passes += 1
             else:
                 passes = 0 # reset number of consecutive passes
             if passes >= 2:
                 break
+
         # return the winning colour
         return winningColor
 
-    def rule_based_move(self, board, color):
-        """
-        returns best move for color
-        """
-        bestMove = None
-        bestMoveScore = RANDOM
+    # def rule_based_move(self, board, color):
+    #     """
+    #     returns best move for color
+    #     """
+    #     bestMove = None
+    #     bestMoveScore = RANDOM
+
+    #     all_moves = self.rule_based_moves(board, color)
+    #     for _, move in all_moves:
+    #         moveScore = self.check_move(board, color, move)
+    #         if moveScore == WIN:
+    #             return move, WIN
+    #         if moveScore > bestMoveScore:
+    #             bestMove = move
+    #             bestMoveScore = moveScore
+
+    #     if bestMove is None:
+    #         return GoBoardUtil.generate_random_move(board, color), bestMoveScore
+    #     else:
+    #         return bestMove, bestMoveScore
+
+    def rule_based_moves(self, board, color):
+        moveResults = []
 
         for move in board.get_empty_points():
             moveScore = self.check_move(board, color, move)
-            if moveScore == WIN:
-                return move, WIN
-            if moveScore > bestMoveScore:
-                bestMove = move
-                bestMoveScore = moveScore
+            moveResults.append((moveScore, move))
 
-        if bestMove is None:
-            return GoBoardUtil.generate_random_move(board, color), bestMoveScore
-        else:
-            return bestMove, bestMoveScore
+        moveResults.sort(reverse = True, key = lambda x: x[0])
+
+        # get best moves
+        bestMoves = []
+        bestMoveScore = RANDOM
+        for move in moveResults:
+            if move[0] > bestMoveScore:
+                bestMoveScore = move[0]
+            if move[0] < bestMoveScore:
+                break
+            bestMoves.append(move)
+
+        return bestMoves
 
     def check_move(self, board, color, move):
         """

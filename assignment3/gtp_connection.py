@@ -150,6 +150,8 @@ class GtpConnection:
 
     def respond(self, response=""):
         """ Send response to stdout """
+        if response == "":
+            return
         stdout.write("= {}\n\n".format(response))
         stdout.flush()
 
@@ -293,13 +295,13 @@ class GtpConnection:
             self.respond("")
             return
         # set for Random as defualt
-        move_list = list(map(lambda move: (move, RANDOM), self.board.get_empty_points()))
+        move_list = list(map(lambda move: (RANDOM, move), self.board.get_empty_points()))
         if len(move_list) == 0:
             self.respond("")
             return
         # change moves to rule_based if policy type is rule_based 
         if self.policy == "rule_based":
-            move_list = self.rule_based_moves(self.board, self.board.current_player)
+            move_list = self.go_engine.rule_based_moves(self.board, self.board.current_player)
         
         # get best moves
         output = []
@@ -329,21 +331,6 @@ class GtpConnection:
         self.respond(output_str)
 
         return    
-
-    def rule_based_moves(self, board, color):
-        """
-        returns array of results of each move for color
-        in form (move score, move)
-        """
-        moveResults = []
-
-        for move in board.get_empty_points():
-            moveScore = self.go_engine.check_move(board, color, move)
-            moveResults.append((moveScore, move))
-
-        moveResults.sort(reverse = True, key = lambda x: x[0])
-
-        return moveResults
            
     def gogui_rules_game_id_cmd(self, args):
         self.respond("Gomoku")

@@ -1,0 +1,27 @@
+boardsize 7
+policy rule_based
+clear_board
+play B B1
+play W C2
+play B B2
+play W C3
+play B B3
+play W C4
+play B B4
+
+70 policy_moves
+#?[BlockWin B5]
+
+showboard
+80 genmove W
+#?[b5|B5]
+
+play B A1
+90 policy_moves
+#?[OpenFour C5]
+play W C5
+play B A2
+100 policy_moves
+#?[Win C1 C6]
+110 genmove W
+#?[C1|C6]
