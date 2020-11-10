@@ -7,6 +7,8 @@ from board_util import GoBoardUtil, PASS, EMPTY, BLACK, WHITE
 from board import GoBoard
 import numpy as np
 
+import cProfile
+
 WIN = 4
 BLOCK_WIN = 3
 OPEN_FOUR = 2
@@ -52,7 +54,9 @@ class Gomoku():
     def simulate_move(self, board, move, color):
         wins = 0
         for _ in range(self.numSimulations):
+            # simulate the move numSimulations times
             result = self.simulate(board, move, color)
+
             if result == color:
                 wins += 1
         return wins
@@ -60,18 +64,25 @@ class Gomoku():
     def simulate(self, board, move, color):
         boardCopy = board.copy()
         boardCopy.play_move(move, color)
+        # return the color if they won
+        if boardCopy.check_win(move) == color:
+            return color
         # first player played move, now opponent plays
         opponent = GoBoardUtil.opponent(color)
         return self.play_game(boardCopy, opponent)
 
     def play_game(self, board, color):
         passes = 0
+        winningColor = EMPTY
 
         # simulate entire game to completion
-        while board.detect_five_in_a_row() == EMPTY and board.get_empty_points() != []:
+        while board.get_empty_points() != []:
             color = board.current_player
-            # TODO: filter moves by rules
-            move = self.rule_based_move(board, color)
+            move, moveScore = self.rule_based_move(board, color)
+            # return color if they won
+            if moveScore == WIN:
+                winningColor = color
+            
             board.play_move(move, color)
             if move == PASS:
                 passes += 1
@@ -80,7 +91,7 @@ class Gomoku():
             if passes >= 2:
                 break
         # return the winning colour
-        return board.detect_five_in_a_row()
+        return winningColor
 
     def rule_based_move(self, board, color):
         """
@@ -88,21 +99,19 @@ class Gomoku():
         """
         bestMove = None
         bestMoveScore = RANDOM
-        # print(board.get_empty_points())
-
 
         for move in board.get_empty_points():
             moveScore = self.check_move(board, color, move)
             if moveScore == WIN:
-                return move
+                return move, WIN
             if moveScore > bestMoveScore:
                 bestMove = move
                 bestMoveScore = moveScore
 
         if bestMove is None:
-            return GoBoardUtil.generate_random_move(board, color)
+            return GoBoardUtil.generate_random_move(board, color), bestMoveScore
         else:
-            return bestMove
+            return bestMove, bestMoveScore
 
     def check_move(self, board, color, move):
         """
@@ -113,46 +122,45 @@ class Gomoku():
             1 if block open four
             0 otherwise (random)
         """
-        newpoint = board.unpadded_point(move)
-        lines = board.boardLines[newpoint]
+
+        board.play_move(move, color)
+
+        newPoint = board.unpadded_point(move)
+        lines5 = board.boardLines5[newPoint]
         maxScore = RANDOM
-        for line in lines:
-            counts = self.get_counts(board, line)
+        for line in lines5:
+            counts = board.get_counts(line)
             if color == BLACK:
                 myCount, oppCount, openCount = counts
             else:
                 oppCount, myCount, openCount = counts
 
-            if myCount == 4:
+            if myCount == 5:
+                board.undo_move(move)
                 return WIN
-            elif oppCount == 4:
+            elif oppCount == 4 and myCount == 1:
                 maxScore = max(BLOCK_WIN, maxScore)
-            elif myCount == 3 and oppCount == 0:
-                maxScore = max(OPEN_FOUR, maxScore)
-            elif myCount == 0 and oppCount == 3:
-                maxScore = max(BLOCK_OPEN_FOUR, maxScore)
+
+        lines6 = board.boardLines6[newPoint]
+        oppColor = GoBoardUtil.opponent(color)
+        for line in lines6:
+            counts = board.get_counts(line)
+            if color == BLACK:
+                myCount, oppCount, openCount = counts
             else:
-                maxScore = max(RANDOM, maxScore)
+                oppCount, myCount, openCount = counts
+
+            firstColor = board.board[line[0]]
+            lastColor = board.board[line[-1]]
+
+            if myCount == 4 and firstColor == EMPTY and lastColor == EMPTY:
+                maxScore = max(OPEN_FOUR, maxScore)
+            elif myCount == 1 and oppCount == 3 and firstColor != oppColor and lastColor != oppColor:
+                maxScore = max(BLOCK_OPEN_FOUR, maxScore)
+
+        board.undo_move(move)
 
         return maxScore
-
-    @staticmethod
-    def get_counts(board, five_line):
-        b_count = 0
-        w_count = 0
-        e_count = 0
-
-        for p in five_line:
-            stone = board.board[p]
-            if stone == BLACK:
-                b_count += 1
-            elif stone == WHITE:
-                w_count += 1
-            else:
-                e_count += 1
-
-        return b_count, w_count, e_count
-
 
 def run():
     """
@@ -165,3 +173,4 @@ def run():
 
 if __name__ == "__main__":
     run()
+    # cProfile.run('run()')

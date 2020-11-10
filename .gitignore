@@ -7,4 +7,5 @@
 assignment2/assignment2
 /**/*.tgz
 /**/presubmission
+.vscode/
 
