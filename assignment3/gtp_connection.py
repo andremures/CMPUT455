@@ -293,9 +293,8 @@ class GtpConnection:
             self.respond("")
             return
         # set for Random as defualt
-        move_type = "Random"
-        empty_points = self.board.get_empty_points()
-        if empty_points.size == 0:
+        move_list = list(map(lambda move: (move, RANDOM), self.board.get_empty_points()))
+        if len(move_list) == 0:
             self.respond("")
             return
         # change moves to rule_based if policy type is rule_based 
