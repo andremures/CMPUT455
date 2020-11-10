@@ -329,17 +329,6 @@ class GtpConnection:
         
         self.respond(output_str)
 
-        # output = []
-        # for move in move_list:
-        #     move_coord = point_to_coord(move, self.board.size)
-        #     output.append(format_point(move_coord))
-        # output.sort()
-
-        # output_str = move_type
-        # for move_string in output:
-        #     output_str += " " + move_string
-
-        # self.respond(output_str)
         return    
 
     def rule_based_moves(self, board, color):
