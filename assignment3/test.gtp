@@ -1,13 +1,12 @@
-boardsize 8
+policy rule_based
 clear_board
-
-play B A3
-play W D1
-play B A4
-play W D2
-play B A5
-policy rule_based 
+boardsize 8
+play B D2
+play W A2
+play B D3
+play W A3
+play B D4
 
 showboard
-140 policy_moves
-#?[BlockOpenFour A2 A6]
+120 policy_moves
+#?[BlockOpenFour D1 D5 D6]

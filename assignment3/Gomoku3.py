@@ -181,11 +181,26 @@ class Gomoku():
             if myCount == 4 and firstColor == EMPTY and lastColor == EMPTY:
                 maxScore = max(OPEN_FOUR, maxScore)
             elif myCount == 1 and oppCount == 3 and firstColor != oppColor and lastColor != oppColor:
+                isBlockOpenFour = False
+
                 colorLine = tuple(map(lambda m: board.board[m], line))
                 # must hard code these two cases, they are the only six line patterns that match
-                # the above rule, but do not block an open four
-                if colorLine != (color, EMPTY, oppColor, oppColor, oppColor, EMPTY) and \
-                   colorLine != (EMPTY, oppColor, oppColor, oppColor, EMPTY, color):
+                # the above rule, but do not necessarily block an open four
+                if colorLine == (color, EMPTY, oppColor, oppColor, oppColor, EMPTY) or \
+                   colorLine == (EMPTY, oppColor, oppColor, oppColor, EMPTY, color):
+
+                    # There are alot of edge cases here, so we play the move for
+                    # the opposite color and check if they still have an open four available to them
+                    # This may break if there are multiple open fours, which wouldn't happen
+                    # if the rule based policy is followed throughout the game
+                    bestOppMoves = self.rule_based_moves(board, oppColor)
+                    # We know there are moves left in this case
+                    if bestOppMoves[0][0] < OPEN_FOUR:
+                        isBlockOpenFour = True
+                else:
+                    isBlockOpenFour = True
+                
+                if isBlockOpenFour:
                     maxScore = max(BLOCK_OPEN_FOUR, maxScore)
 
         board.undo_move(move)
