@@ -5,7 +5,7 @@
 /**/*.html
 /**/*.dat
 assignment2/assignment2
-assignment3/assignment3
+assignment3/*
 /**/*.tgz
 /**/presubmission
 .vscode/
