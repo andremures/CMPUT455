@@ -34,8 +34,6 @@ class Gomoku():
         self.numSimulations = 10
 
     def get_move(self, board, color):
-
-
         # generate a move using one-ply MC simulations
         emptyPoints = board.get_empty_points()
 

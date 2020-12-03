@@ -4,7 +4,6 @@ Utility functions for Go board.
 """
 
 import numpy as np
-import random
 
 """
 Encoding of colors on and off a Go board.
@@ -41,7 +40,7 @@ Encoding of "not a real point", used as a marker
 NULLPOINT = 0
 
 """
-The largest board we allow.
+The largest board we allow. 
 To support larger boards the coordinate printing in
 GtpConnection.format_point needs to be changed.
 """
@@ -49,7 +48,7 @@ MAXSIZE = 25
 
 """
 where1d: Helper function for using np.where with 1-d arrays.
-The result of np.where is a tuple which contains the indices
+The result of np.where is a tuple which contains the indices 
 of elements that fulfill the condition.
 For 1-d arrays, this is a singleton tuple.
 The [0] indexing is needed to extract the result from the singleton tuple.
@@ -70,13 +69,13 @@ def coord_to_point(row, col, boardsize):
     Returns
     -------
     point
-
+    
     Map (row, col) coordinates to array index
     Below is an example of numbering points on a 3x3 board.
-    Spaces are added for illustration to separate board points
+    Spaces are added for illustration to separate board points 
     from BORDER points.
     There is a one point BORDER between consecutive rows (e.g. point 12).
-
+    
     16   17 18 19   20
 
     12   13 14 15
@@ -180,3 +179,17 @@ class GoBoardUtil(object):
             start = goboard.row_start(row + 1)
             board2d[row, :] = goboard.board[start : start + size]
         return board2d
+    
+    # method that returns the board in 1D array form
+    @staticmethod
+    def get_oneD_board(goboard):
+        
+        sizePadded = len(goboard.board)
+        board1d = []
+
+        # don't include element if its padding 
+        for i in range(sizePadded):
+            if goboard.board[i] != 3:
+                board1d.append(goboard.board[i])
+        
+        return board1d
