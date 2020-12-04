@@ -1,13 +1,14 @@
 import pexpect
 
-player1 = 'alphabeta_player/Gomoku.py'
-player2 = 'flat_mc_player/Gomoku3.py'
+player1 = 'gomoku4/Gomoku4.py'
+# player2 = 'flat_mc_player/Gomoku3.py'
+player2 = 'random_player/Gomoku2.py'
 
 win1 = 0
 win2 = 0
 numTimeout = 0
 draw = 0
-timeout = 30
+timeout = 2
 
 
 def getMove(p,color):
@@ -85,7 +86,7 @@ def playSingleGame(alternative=False):
     return result,numTimeout
 
 
-def playGames(numGame=2):
+def playGames(numGame=5):
     global win1,win2,draw,numTimeout
     print("player1:", player1)
     print("player2:", player2)

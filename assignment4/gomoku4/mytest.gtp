@@ -1,0 +1,21 @@
+clear_board
+play B C4
+play W E2
+play B D3
+play W A3
+play B A5
+play W C2
+play B G4
+play W F6
+play B C5
+play W B6
+play B D7
+play W A4
+play B F4
+play W G5
+play B E4
+play W E5
+00 timelimit 5
+#?[]
+50 genmove b
+#?[b]

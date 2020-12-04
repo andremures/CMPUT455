@@ -9,4 +9,5 @@ assignment3/*
 /**/*.tgz
 /**/presubmission
 .vscode/
+/**/game_results.txt
 

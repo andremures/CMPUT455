@@ -1,5 +1,0 @@
-player 1: alphabeta_player/Gomoku.py
-player 2: random_player/Gomoku2.py
-player 1 wins 2
-player 2 wins 0
-draw 0

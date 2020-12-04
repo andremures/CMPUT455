@@ -59,6 +59,7 @@ class GtpConnection:
             "list_commands": self.list_commands_cmd,
             "play": self.play_cmd,
             "legal_moves": self.legal_moves_cmd,
+            "timelimit": self.time_limit_cmd,
             "gogui-rules_game_id": self.gogui_rules_game_id_cmd,
             "gogui-rules_board_size": self.gogui_rules_board_size_cmd,
             "gogui-rules_legal_moves": self.gogui_rules_legal_moves_cmd,
@@ -228,6 +229,12 @@ class GtpConnection:
         sorted_moves = " ".join(sorted(gtp_moves))
         self.respond(sorted_moves)
 
+    def time_limit_cmd(self, args):
+        assert 1 <= int(args[0]) <= 100
+        limit = int(args[0])
+        self.go_engine.set_timeout(limit)
+        self.respond()
+
     def play_cmd(self, args):
         """
         play a move args[1] for given color args[0] in {'b','w'}
@@ -263,6 +270,7 @@ class GtpConnection:
         Generate a move for the color args[0] in {'b', 'w'}, for the game of gomoku.
         """
         result = self.board.detect_five_in_a_row()
+        print(self.board2d())
         if result == GoBoardUtil.opponent(self.board.current_player):
             self.respond("resign")
             return
@@ -451,6 +459,7 @@ def move_to_coord(point_str, board_size):
     if not (col <= board_size and row <= board_size):
         raise ValueError("\"{}\" wrong coordinate".format(s))
     return row, col
+
 
 
 def color_to_int(c):
