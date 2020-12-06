@@ -339,8 +339,8 @@ class GoBoard(object):
                 return BLACK
             elif w_count == 5:
                 return WHITE
-            else:
-                return EMPTY
+
+        return EMPTY
 
     def get_counts(self, line):
         b_count = 0
@@ -357,3 +357,8 @@ class GoBoard(object):
                 e_count += 1
 
         return b_count, w_count, e_count
+
+    def __str__(self):
+        twod = GoBoardUtil.get_twoD_board(self)
+        twod_str = ['[' + ' '.join(row) + ']' for row in twod]
+        return '\n'.join(twod_str)

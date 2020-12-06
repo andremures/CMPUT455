@@ -1,3 +1,4 @@
+import sys
 import signal
 from gtp_connection import GtpConnection
 from board_util import GoBoardUtil, PASS, EMPTY, BLACK, WHITE
@@ -26,7 +27,90 @@ def handler(signum, frame):
 signal.signal(signal.SIGALRM, handler)
 
 
-class Gomoku():
+class RulePolicy:
+
+    def best_moves(self, board, color):
+        moveResults = []
+
+        for move in board.get_empty_points():
+            moveScore = self.check_move(board, color, move)
+            moveResults.append((move, moveScore))
+
+        moveResults.sort(reverse=True, key=lambda x: x[1])
+        return moveResults
+
+    def check_move(self, board, color, move):
+        """
+        returns:
+            4 if winning
+            3 if block win
+            2 if open four
+            1 if block open four
+            0 otherwise (random)
+        """
+
+        board.play_move(move, color)
+
+        newPoint = board.unpadded_point(move)
+        lines5 = board.boardLines5[newPoint]
+        maxScore = RANDOM
+        for line in lines5:
+            counts = board.get_counts(line)
+            if color == BLACK:
+                myCount, oppCount, openCount = counts
+            else:
+                oppCount, myCount, openCount = counts
+
+            if myCount == 5:
+                board.undo_move(move)
+                return WIN
+            elif oppCount == 4 and myCount == 1:
+                maxScore = max(BLOCK_WIN, maxScore)
+
+        lines6 = board.boardLines6[newPoint]
+        oppColor = GoBoardUtil.opponent(color)
+        for line in lines6:
+            counts = board.get_counts(line)
+            if color == BLACK:
+                myCount, oppCount, openCount = counts
+            else:
+                oppCount, myCount, openCount = counts
+
+            firstColor = board.board[line[0]]
+            lastColor = board.board[line[-1]]
+
+            if myCount == 4 and firstColor == EMPTY and lastColor == EMPTY:
+                maxScore = max(OPEN_FOUR, maxScore)
+            elif myCount == 1 and oppCount == 3 and firstColor != oppColor and lastColor != oppColor:
+                isBlockOpenFour = False
+
+                colorLine = tuple(map(lambda m: board.board[m], line))
+                # must hard code these two cases, they are the only six line patterns that match
+                # the above rule, but do not necessarily block an open four
+                if colorLine == (color, EMPTY, oppColor, oppColor, oppColor, EMPTY) or \
+                   colorLine == (EMPTY, oppColor, oppColor, oppColor, EMPTY, color):
+
+                    # There are alot of edge cases here, so we play the move for
+                    # the opposite color and check if they still have an open four available to them
+                    # This may break if there are multiple open fours, which wouldn't happen
+                    # if the rule based policy is followed throughout the game
+                    bestOppMoves = self.best_moves(board, oppColor)
+                    # We know there are moves left in this case
+                    if bestOppMoves[0][1] < OPEN_FOUR:
+                        isBlockOpenFour = True
+                else:
+                    isBlockOpenFour = True
+
+                if isBlockOpenFour:
+                    maxScore = max(BLOCK_OPEN_FOUR, maxScore)
+
+        board.undo_move(move)
+
+        return maxScore
+
+
+
+class Gomoku:
     def __init__(self):
         """
         Gomoku player that selects moves randomly from the set of legal moves.
@@ -51,7 +135,7 @@ class Gomoku():
         signal.alarm(self.timelimit)  # sets an alarm for the given time_limit
 
         try:
-            mcts_tree = MctsTree(board, color, 100)
+            mcts_tree = MctsTree(board, color, 100, RulePolicy())
             print(board.board)
 
             while True:
@@ -221,7 +305,13 @@ def run():
     """
     board = GoBoard(7)
     con = GtpConnection(Gomoku(), board)
-    con.start_connection()
+
+    if len(sys.argv) >= 4 and sys.argv[1] == '--pycharm':
+        filename = sys.argv[3]
+        with open(filename, 'r') as f:
+            con.start_connection(f)
+    else:
+        con.start_connection(sys.stdin)
     
 
 if __name__ == "__main__":

@@ -87,15 +87,15 @@ class GtpConnection:
     def flush(self):
         stdout.flush()
 
-    def start_connection(self):
+    def start_connection(self, instream):
         """
         Start a GTP connection.
         This function continuously monitors standard input for commands.
         """
-        line = stdin.readline()
+        line = instream.readline()
         while line:
             self.get_cmd(line)
-            line = stdin.readline()
+            line = instream.readline()
 
     def get_cmd(self, command):
         """
@@ -232,7 +232,7 @@ class GtpConnection:
         self.respond(sorted_moves)
 
     def time_limit_cmd(self, args):
-        assert 1 <= int(args[0]) <= 100
+        assert 1 <= int(args[0]) <= 10000
         limit = int(args[0])
         self.go_engine.set_timeout(limit)
         self.respond()

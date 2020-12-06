@@ -8,6 +8,14 @@ from board_util import (
     EMPTY,
 )
 
+
+def find(pred, arr):
+    for e in arr:
+        if pred(e):
+            return e
+    return None
+
+
 class MctsNode:
     def __init__(self, parent, move, color, boardsize):
         self.parent = parent
@@ -49,12 +57,13 @@ class MctsNode:
 
 
 class MctsTree:
-    def __init__(self, board, color, num_sims):
+    def __init__(self, board, color, num_sims, rule_policy):
         self.board = board
         opp_color = GoBoardUtil.opponent(color)
         self.root = MctsNode(None, None, opp_color, board.size)
         self.color = color
         self.num_sims = num_sims
+        self.rule_policy = rule_policy
 
     def select(self):
         current = self.root
@@ -73,15 +82,13 @@ class MctsTree:
         for move in node.move_list:
             board_copy.play_move(move, board_copy.current_player)
 
-        already_expanded_moves = list(map(lambda n: n.move, node.children))
+        already_expanded_moves = set(map(lambda n: n.move, node.children))
 
-        while True:
-            # later this will be using a rule based policy to select the next child to expand
-            next_move = GoBoardUtil.generate_random_move(board_copy, board_copy.current_player)
-            if next_move not in already_expanded_moves:
-                break
+        best_moves = self.rule_policy.best_moves(board_copy, board_copy.current_player)
+        best_moves = list(map(lambda x: x[0], best_moves))
+        next_move = find(lambda el: el not in already_expanded_moves, best_moves)
 
-        board_copy.play_move(node.move, board_copy.current_player)
+        board_copy.play_move(next_move, board_copy.current_player)
         opp_color = GoBoardUtil.opponent(node.color)
         new_node = MctsNode(node, next_move, opp_color, self.board.size)
         node.add_child(new_node)
@@ -135,4 +142,4 @@ def mcts_step(mcts_tree):
     selected_node = mcts_tree.select()
     new_node, board_copy = mcts_tree.expand(selected_node)
     wins = mcts_tree.simulate(new_node, board_copy)
-    mcts_tree.back_propagate(selected_node, wins)
+    mcts_tree.back_propagate(new_node, wins)
