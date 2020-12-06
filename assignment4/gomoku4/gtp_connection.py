@@ -161,7 +161,9 @@ class GtpConnection:
         self.board.reset(size)
 
     def board2d(self):
-        return str(GoBoardUtil.get_twoD_board(self.board))
+        twod = GoBoardUtil.get_twoD_board(self.board)
+        twod_str = ['[' + ' '.join(row) + ']' for row in twod]
+        return '\n'.join(twod_str)
 
     def protocol_version_cmd(self, args):
         """ Return the GTP protocol version being used (always 2) """

@@ -175,8 +175,17 @@ class GoBoardUtil(object):
         Rows 1..size of goboard are copied into rows 0..size - 1 of board2d
         """
         size = goboard.size
-        board2d = np.zeros((size, size), dtype=GO_POINT)
+        board2d = [[''] * size] * size
         for row in range(size):
             start = goboard.row_start(row + 1)
-            board2d[row, :] = goboard.board[start : start + size]
+            board2d[row] = list(map(display_color, goboard.board[start : start + size]))
         return board2d
+
+
+def display_color(c):
+    if c == EMPTY:
+        return '.'
+    elif c == BLACK:
+        return '0'
+    else:
+        return '1'
