@@ -1,4 +1,5 @@
 clear_board
+00 timelimit 5
 play B C4
 play W E2
 play B D3
@@ -13,9 +14,7 @@ play B D7
 play W A4
 play B F4
 play W G5
-play B E4
+40 genmove b
 play W E5
-00 timelimit 5
-#?[]
 50 genmove b
 #?[b]

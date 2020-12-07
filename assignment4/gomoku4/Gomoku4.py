@@ -3,6 +3,7 @@ import signal
 from gtp_connection import GtpConnection
 from board_util import GoBoardUtil, PASS, EMPTY, BLACK, WHITE
 from board import GoBoard
+from evaluation import evaluate
 import random
 import numpy as np
 from mcts import MctsTree, mcts_step
@@ -25,6 +26,20 @@ def handler(signum, frame):
 
 
 signal.signal(signal.SIGALRM, handler)
+
+
+class HeuristicPolicy:
+
+    def best_moves(self, board, color):
+        moves = board.get_empty_points()
+        moveResults = list(map(lambda m: (m, self._move_score(board, color, m)), moves))
+        return sorted(moveResults, key=lambda r: r[1], reverse=True)
+
+    def _move_score(self, board, color, m):
+        board.play_move(m, board.current_player)
+        score = evaluate(board, color)
+        board.undo_move(m)
+        return score
 
 
 class RulePolicy:
@@ -135,9 +150,7 @@ class Gomoku:
         signal.alarm(self.timelimit)  # sets an alarm for the given time_limit
 
         try:
-            mcts_tree = MctsTree(board, color, 100, RulePolicy())
-            print(board.board)
-
+            mcts_tree = MctsTree(board, color, 100, HeuristicPolicy())
             while True:
                 mcts_step(mcts_tree)
 

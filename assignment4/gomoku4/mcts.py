@@ -8,6 +8,8 @@ from board_util import (
     EMPTY,
 )
 
+nodeid = 0
+
 
 def find(pred, arr):
     for e in arr:
@@ -16,8 +18,17 @@ def find(pred, arr):
     return None
 
 
+# The exploration parameter is theoretically equal to sqrt(2)
+# However, in practice it should be chosen empirically
+C = np.sqrt(2)
+
+
 class MctsNode:
     def __init__(self, parent, move, color, boardsize):
+        global nodeid
+        self.id = nodeid
+        nodeid += 1
+
         self.parent = parent
         self.children = []
         self.move = move
@@ -25,6 +36,7 @@ class MctsNode:
         self.sims = 0
         self.boardsize = boardsize
         self.color = color  # color that just played
+        self.winner = EMPTY
 
         if parent is None:
             # if node is root
@@ -36,6 +48,9 @@ class MctsNode:
     def add_child(self, child):
         self.children.append(child)
 
+    def set_winner(self, winner):
+        self.winner = winner
+
     def update(self, wins, sims):
         self.wins += wins
         self.sims += sims
@@ -44,6 +59,16 @@ class MctsNode:
         if self.sims == 0:
             return 0
         return self.wins / self.sims
+
+    def uct(self):
+        if self.sims == 0:
+            return 0
+
+        parent_sims = self.parent.sims if self.parent is not None else self.sims
+        return self.winrate() + C * np.sqrt(np.log(parent_sims) / self.sims)
+
+    def __eq__(self, other):
+        return other.id == self.id
 
     def __str__(self):
         return f"{format_point(point_to_coord(self.move, self.boardsize))} {self.wins}/{self.sims}"
@@ -68,12 +93,17 @@ class MctsTree:
     def select(self):
         current = self.root
         while True:
-            choices = [None] + current.children
+            choices = [current] + current.children
             # for now, we are expanding a random node in the tree,
             # but later this will be replaced with a better tree policy based on uct
-            next_node = random.choice(choices)
-            if next_node is None:
+
+            choice_ucts = list(map(lambda n: n.uct(), choices))
+            max_uct_index = np.argmax(choice_ucts)
+            next_node = choices[max_uct_index]
+
+            if next_node == current:
                 return current
+
             current = next_node
 
     def expand(self, node):
@@ -96,12 +126,15 @@ class MctsTree:
         return new_node, board_copy
 
     def simulate(self, node, board_copy):
+        initial_winner = board_copy.check_win(node.move)
+        if initial_winner != EMPTY:
+            node.set_winner(initial_winner)
+            return self.num_sims
+
         wins = 0
         for i in range(self.num_sims):
-            last_move = node.move
-
             moves_played = []
-            winner = board_copy.check_win(last_move)
+            winner = EMPTY
 
             while winner == EMPTY and len(board_copy.get_empty_points()) > 0:
                 next_move = GoBoardUtil.generate_random_move(board_copy, board_copy.current_player)

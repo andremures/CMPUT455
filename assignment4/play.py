@@ -1,8 +1,8 @@
 import pexpect
 
 player1 = 'gomoku4/Gomoku4.py'
-# player2 = 'flat_mc_player/Gomoku3.py'
-player2 = 'random_player/Gomoku2.py'
+player2 = 'flat_mc_player/Gomoku3.py'
+# player2 = 'random_player/Gomoku2.py'
 
 win1 = 0
 win2 = 0
@@ -36,7 +36,7 @@ def playSingleGame(alternative=False):
     else:
         p1 = pexpect.spawn('python3 ' + player2, timeout=timeout+1)
         p2 = pexpect.spawn('python3 ' + player1, timeout=timeout+1)
-    ob = pexpect.spawn('python3 random_player/Gomoku2.py')
+    ob = pexpect.spawn('python3 gomoku4/Gomoku4.py')
     setupPlayer(p1)
     setupPlayer(p2)
     result = None
@@ -66,7 +66,10 @@ def playSingleGame(alternative=False):
             playMove(p1, 'w', move)
             playMove(ob, 'w', move)
 
+        ob.expect('= ')
         ob.sendline('showboard')
+        ob.expect("=.+(\s?\[.+\]\n?)+")
+        print(ob.after.decode('utf-8'))
         sw = 1-sw
         print(move)
         ob.sendline('gogui-rules_final_result')
