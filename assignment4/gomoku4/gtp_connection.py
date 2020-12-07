@@ -272,7 +272,7 @@ class GtpConnection:
         Generate a move for the color args[0] in {'b', 'w'}, for the game of gomoku.
         """
         result = self.board.detect_five_in_a_row()
-        print(self.board2d())
+        # print(self.board2d())
         if result == GoBoardUtil.opponent(self.board.current_player):
             self.respond("resign")
             return

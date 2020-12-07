@@ -155,7 +155,7 @@ class Gomoku:
                 mcts_step(mcts_tree)
 
         except TimeoutException:
-            print(mcts_tree)
+            # print(mcts_tree)
             return mcts_tree.best_move()
         finally:
             signal.alarm(0)  # disable the alarm
