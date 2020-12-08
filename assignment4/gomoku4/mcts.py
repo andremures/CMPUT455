@@ -76,7 +76,7 @@ class MctsNode:
         return other.id == self.id
 
     def __str__(self):
-        return f"{format_point(point_to_coord(self.move, self.boardsize))} {self.wins}/{self.sims}"
+        return format_point(point_to_coord(self.move, self.boardsize)) + " " + str(self.wins/self.sims)
 
     def __repr__(self, level=0):
         ret = "  " * level + str(self) + "\n"
