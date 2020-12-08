@@ -181,8 +181,8 @@ class Gomoku:
         except TimeoutException:
             # print(mcts_tree)
             return mcts_tree.best_move()
-        # except Exception:
-        #     return mcts_tree.best_move()
+        except Exception:
+            return mcts_tree.best_move()
         finally:
             signal.alarm(0)  # disable the alarm
 
