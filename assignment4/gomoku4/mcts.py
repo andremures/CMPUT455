@@ -21,7 +21,9 @@ def find(pred, arr):
 
 # The exploration parameter is theoretically equal to sqrt(2)
 # However, in practice it should be chosen empirically
-C = np.sqrt(2)
+# C = np.sqrt(2)
+C = 2
+NUM_SIMS = 50
 
 
 class MctsNode:
@@ -85,12 +87,11 @@ class MctsNode:
 
 
 class MctsTree:
-    def __init__(self, board, color, num_sims, rule_policy):
+    def __init__(self, board, color, rule_policy):
         self.board = board
         opp_color = GoBoardUtil.opponent(color)
         self.root = MctsNode(None, None, opp_color, board.size)
         self.color = color
-        self.num_sims = num_sims
         self.rule_policy = rule_policy
 
     def select(self):
@@ -139,7 +140,7 @@ class MctsTree:
         new_node = MctsNode(node, next_move, opp_color, self.board.size)
         node.add_child(new_node)
 
-        if len(node.children) == num_available_moves:
+        if len(node.children) == len(best_moves):
             node.is_fully_expanded = True
 
         if num_available_moves == 1:
@@ -150,15 +151,15 @@ class MctsTree:
     def simulate(self, node, board_copy):
         if len(board_copy.get_empty_points()) == 0:
             node.set_winner(DRAW)
-            return self.num_sims / 2
+            return NUM_SIMS / 2
 
         initial_winner = board_copy.check_win(node.move)
         if initial_winner != EMPTY:
             node.set_winner(initial_winner)
-            return self.num_sims
+            return NUM_SIMS
 
         wins = 0
-        for i in range(self.num_sims):
+        for i in range(NUM_SIMS):
             moves_played = []
             winner = EMPTY
 
@@ -181,7 +182,7 @@ class MctsTree:
 
     def back_propagate(self, node, wins):
         if node.winner in (WHITE, BLACK):
-            node.update(wins, self.num_sims)
+            node.update(wins, NUM_SIMS)
             parent = node.parent
             if parent is not None:
                 parent.set_winner(node.winner)
@@ -189,24 +190,30 @@ class MctsTree:
 
                 current = parent
                 while current is not None:
-                    current.update(wins, self.num_sims)
-                    wins = self.num_sims - wins
+                    current.update(wins, NUM_SIMS)
+                    wins = NUM_SIMS - wins
                     current = current.parent
 
             return
 
         current = node
         while current is not None:
-            current.update(wins, self.num_sims)
-            wins = self.num_sims - wins
+            current.update(wins, NUM_SIMS)
+            wins = NUM_SIMS - wins
             current = current.parent
 
     def best_move(self):
-        # because we are picking move randomly, we pick the node with the highest winrate
-        # this needs to be changed to use the most pulled so far
-        scores = list(map(lambda n: n.winrate(), self.root.children))
-        max_score_index = np.argmax(scores)
-        return self.root.children[max_score_index].move
+        robust_limit = 2 * NUM_SIMS
+
+        # pick the max robust child
+        robust_children = list(filter(lambda n: n.sims >= robust_limit, self.root.children))
+
+        if len(robust_children) == 0:
+            robust_children = self.root.children
+
+        scores = list(map(lambda n: n.winrate(), robust_children))
+        max_score_index = int(np.argmax(scores))
+        return robust_children[max_score_index].move
 
     def __str__(self):
         return repr(self.root)
