@@ -38,4 +38,16 @@ play B B2
 play W C2
 play B D2
 play W G2
+
+play B B3
+play W A5
+play B G4
+play W A6
+play B B6
+play W B7
+play B A7
+play W F6
+play B F7
+play W G6
+
 10 genmove b

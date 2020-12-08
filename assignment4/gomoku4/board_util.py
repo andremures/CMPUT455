@@ -14,6 +14,7 @@ EMPTY = 0
 BLACK = 1
 WHITE = 2
 BORDER = 3
+DRAW = 4
 
 
 def is_black_white(color):

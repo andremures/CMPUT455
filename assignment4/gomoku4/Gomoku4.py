@@ -152,6 +152,7 @@ class Gomoku:
         try:
             mcts_tree = MctsTree(board, color, 100, HeuristicPolicy())
             while True:
+                # print(mcts_tree)
                 mcts_step(mcts_tree)
 
         except TimeoutException:

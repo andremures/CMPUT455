@@ -6,6 +6,7 @@ from board_util import (
     BLACK,
     WHITE,
     EMPTY,
+    DRAW,
 )
 
 nodeid = 0
@@ -37,6 +38,7 @@ class MctsNode:
         self.boardsize = boardsize
         self.color = color  # color that just played
         self.winner = EMPTY
+        self.is_fully_expanded = False
 
         if parent is None:
             # if node is root
@@ -50,6 +52,7 @@ class MctsNode:
 
     def set_winner(self, winner):
         self.winner = winner
+        self.is_fully_expanded = True
 
     def update(self, wins, sims):
         self.wins += wins
@@ -93,11 +96,19 @@ class MctsTree:
     def select(self):
         current = self.root
         while True:
-            choices = [current] + current.children
-            # for now, we are expanding a random node in the tree,
-            # but later this will be replaced with a better tree policy based on uct
+            if current.is_fully_expanded and current == self.root:
+                choices = current.children
+            else:
+                choices = [current] + current.children
 
-            choice_ucts = list(map(lambda n: n.uct(), choices))
+            filtered_choices = list(filter(lambda n: n.winner == EMPTY, choices))
+
+            if len(filtered_choices) == 0:
+                # If the end move is a win state, we get no filtered choices
+                # So we hard override this to all choices in this case
+                filtered_choices = choices
+
+            choice_ucts = list(map(lambda n: n.uct(), filtered_choices))
             max_uct_index = np.argmax(choice_ucts)
             next_node = choices[max_uct_index]
 
@@ -112,7 +123,12 @@ class MctsTree:
         for move in node.move_list:
             board_copy.play_move(move, board_copy.current_player)
 
+        if node.is_fully_expanded:
+            return node, board_copy
+
         already_expanded_moves = set(map(lambda n: n.move, node.children))
+
+        num_available_moves = len(board_copy.get_empty_points())
 
         best_moves = self.rule_policy.best_moves(board_copy, board_copy.current_player)
         best_moves = list(map(lambda x: x[0], best_moves))
@@ -123,9 +139,19 @@ class MctsTree:
         new_node = MctsNode(node, next_move, opp_color, self.board.size)
         node.add_child(new_node)
 
+        if len(node.children) == num_available_moves:
+            node.is_fully_expanded = True
+
+        if num_available_moves == 1:
+            new_node.is_fully_expanded = True
+
         return new_node, board_copy
 
     def simulate(self, node, board_copy):
+        if len(board_copy.get_empty_points()) == 0:
+            node.set_winner(DRAW)
+            return self.num_sims / 2
+
         initial_winner = board_copy.check_win(node.move)
         if initial_winner != EMPTY:
             node.set_winner(initial_winner)
@@ -154,6 +180,21 @@ class MctsTree:
         return wins
 
     def back_propagate(self, node, wins):
+        if node.winner in (WHITE, BLACK):
+            node.update(wins, self.num_sims)
+            parent = node.parent
+            if parent is not None:
+                parent.set_winner(node.winner)
+                wins = -parent.wins
+
+                current = parent
+                while current is not None:
+                    current.update(wins, self.num_sims)
+                    wins = self.num_sims - wins
+                    current = current.parent
+
+            return
+
         current = node
         while current is not None:
             current.update(wins, self.num_sims)
